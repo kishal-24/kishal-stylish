@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/check.dart';
 import 'package:untitled/Placeorderpage.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import 'cart_data.dart';
 
@@ -612,23 +613,23 @@ class _checkoutState extends State<checkout> {
 
                     onChanged: (value) async {
                       if (value && businessAddress.trim().isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Please add a Business Address first',
-                            ),
-                          ),
+                        Fluttertoast.showToast(
+                          msg: "Please add a Business Address first",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.black,
+                          textColor: Colors.white,
                         );
                         return;
                       }
 
                       if (!value && primaryAddress.trim().isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Please add a Personal Address first',
-                            ),
-                          ),
+                        Fluttertoast.showToast(
+                          msg: "Please add a Personal Address first",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.black,
+                          textColor: Colors.white,
                         );
                         return;
                       }
@@ -868,14 +869,12 @@ class _checkoutState extends State<checkout> {
                             .trim()
                             .isEmpty) {
 
-                          ScaffoldMessenger
-                              .of(context)
-                              .showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Please select a delivery address',
-                              ),
-                            ),
+                          Fluttertoast.showToast(
+                            msg: "Please select a delivery address",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: Colors.black,
+                            textColor: Colors.white,
                           );
 
                           return;
@@ -884,14 +883,12 @@ class _checkoutState extends State<checkout> {
                         if (cart.cartItems
                             .isEmpty) {
 
-                          ScaffoldMessenger
-                              .of(context)
-                              .showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Your cart is empty',
-                              ),
-                            ),
+                          Fluttertoast.showToast(
+                            msg: "Your cart is empty",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: Colors.black,
+                            textColor: Colors.white,
                           );
 
                           return;

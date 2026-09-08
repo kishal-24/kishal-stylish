@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lottie/lottie.dart';
 import 'package:untitled/bot.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class Check extends StatefulWidget {
   final bool isBusinessAddress;
@@ -193,9 +194,13 @@ class _CheckState extends State<Check> {
           isSaving = false;
         });
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to save profile: $e')));
+        Fluttertoast.showToast(
+          msg: "Failed to save profile: $e",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+        );
       }
 
       return null;

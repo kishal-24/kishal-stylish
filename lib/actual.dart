@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/forget.dart';
 import 'package:untitled/sign.dart';
 import 'package:untitled/str.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class actual extends StatefulWidget {
   const actual({super.key});
@@ -33,7 +34,7 @@ class _actualState extends State<actual> {
 
     final String enteredPassword = passwordController.text;
 
-    if (enteredUsername == savedUsername && enteredPassword == savedPassword) {
+    if (enteredUsername == savedUsername && enteredPassword == savedPassword ) {
       await prefs.setBool('isLoggedIn', true);
 
       Navigator.pushReplacement(
@@ -42,17 +43,20 @@ class _actualState extends State<actual> {
       );
     } else if (enteredUsername == savedUsername &&
         enteredPassword != savedPassword) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('password is incorrect')));
+      Fluttertoast.showToast(
+        msg: "password is incorrect",
+        toastLength: Toast.LENGTH_SHORT,
+      );
     } else if (enteredUsername != savedUsername &&
         enteredPassword == savedPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('username or email is incorrect')),
+      Fluttertoast.showToast(
+        msg: "username or email is incorrect",
+        toastLength: Toast.LENGTH_SHORT,
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('user not found .please signup')),
+      Fluttertoast.showToast(
+        msg: "user not found .please signup",
+        toastLength: Toast.LENGTH_SHORT,
       );
     }
   }
@@ -163,6 +167,10 @@ class _actualState extends State<actual> {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter password';
+                          }
+
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
                           }
 
                           return null;

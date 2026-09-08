@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/actual.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class sign extends StatefulWidget {
   const sign({super.key});
@@ -29,12 +30,12 @@ class _signState extends State<sign> {
     }
     if (passwordController.text !=
         confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Password and confirm password do not match',
-          ),
-        ),
+      Fluttertoast.showToast(
+        msg: "Password and confirm password do not match",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
       );
 
       return;
@@ -50,12 +51,12 @@ class _signState extends State<sign> {
       'password',
       passwordController.text,
     );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Account created successfully',
-        ),
-      ),
+    Fluttertoast.showToast(
+      msg: "Account created successfully",
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.black,
+      textColor: Colors.white,
     );
     Navigator.pushReplacement(
       context,
@@ -210,15 +211,17 @@ class _signState extends State<sign> {
                             BorderRadius
                                 .circular(10),
                           ),
-                        ),
-                        validator: (value) {
-                          if (value == null ||
-                              value.isEmpty) {
-                            return 'Please enter password';
-                          }
+                        ),validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter password';
+                        }
 
-                          return null;
-                        },
+                        if (value.length < 6) {
+                          return 'Password must be at least 6 characters';
+                        }
+
+                        return null;
+                      },
                       ),
                     ),
 

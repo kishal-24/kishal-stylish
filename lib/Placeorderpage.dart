@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/payment.dart';
 import 'package:untitled/check.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class PlaceOrderPage extends StatefulWidget {
 final List<Map<String, dynamic>> cartItems;
@@ -825,15 +826,12 @@ const Spacer(),
 
 GestureDetector(
 onTap: () {
-ScaffoldMessenger
-    .of(context)
-    .showSnackBar(
-const SnackBar(
-content:
-Text(
-'Select a coupon',
-),
-),
+Fluttertoast.showToast(
+msg: "Select a coupon",
+toastLength: Toast.LENGTH_SHORT,
+gravity: ToastGravity.BOTTOM,
+backgroundColor: Colors.black,
+textColor: Colors.white,
 );
 },
 
@@ -1095,15 +1093,12 @@ onPressed: () {
 if (selectedAddress
     .trim()
     .isEmpty) {
-ScaffoldMessenger
-    .of(context)
-    .showSnackBar(
-const SnackBar(
-content:
-Text(
-'Please select a delivery address',
-),
-),
+Fluttertoast.showToast(
+msg: "Please select a delivery address",
+toastLength: Toast.LENGTH_SHORT,
+gravity: ToastGravity.BOTTOM,
+backgroundColor: Colors.black,
+textColor: Colors.white,
 );
 
 return;
@@ -1111,15 +1106,12 @@ return;
 
 if (widget.cartItems
     .isEmpty) {
-ScaffoldMessenger
-    .of(context)
-    .showSnackBar(
-const SnackBar(
-content:
-Text(
-'Your cart is empty',
-),
-),
+Fluttertoast.showToast(
+msg: "Your cart is empty",
+toastLength: Toast.LENGTH_SHORT,
+gravity: ToastGravity.BOTTOM,
+backgroundColor: Colors.black,
+textColor: Colors.white,
 );
 
 return;

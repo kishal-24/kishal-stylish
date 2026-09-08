@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:untitled/Placeorderpage.dart';
 import 'package:untitled/cart_data.dart';
 import 'package:untitled/cart_page.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -261,10 +262,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           child: GestureDetector(
                             onTap: () async {
                               if (selectedSize.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please select a size'),
-                                  ),
+                                Fluttertoast.showToast(
+                                  msg: "Please select a size",
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.BOTTOM,
+                                  backgroundColor: Colors.black,
+                                  textColor: Colors.white,
                                 );
 
                                 return;
@@ -410,10 +413,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                         child: GestureDetector(
                           onTap: () {
                             if (selectedSize.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Please select a size'),
-                                ),
+                              Fluttertoast.showToast(
+                                msg: "Please select a size",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                backgroundColor: Colors.black,
+                                textColor: Colors.white,
                               );
 
                               return;
