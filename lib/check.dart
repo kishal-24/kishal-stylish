@@ -27,11 +27,6 @@ class _CheckState extends State<Check> {
 
   final TextEditingController nameController = TextEditingController();
 
-  final TextEditingController emailController = TextEditingController();
-
-  final TextEditingController passwordController = TextEditingController();
-
-  bool hidePassword = true;
   final TextEditingController fullNameController = TextEditingController();
 
   final TextEditingController addressController = TextEditingController();
@@ -67,15 +62,16 @@ class _CheckState extends State<Check> {
 
   Future<void> loadUserDetails() async {
     final prefs = await SharedPreferences.getInstance();
-
+    final imagePath = prefs.getString('profileImage');
     if (!mounted) return;
 
     setState(() {
+      if (imagePath != null && imagePath.isNotEmpty) {
+        profileImage = File(imagePath);
+      }
       nameController.text = prefs.getString('name') ?? '';
 
-      emailController.text = prefs.getString('username') ?? '';
 
-      passwordController.text = prefs.getString('password') ?? '';
 
       // Personal address
       fullNameController.text = prefs.getString('fullName') ?? '';
@@ -101,12 +97,17 @@ class _CheckState extends State<Check> {
   }
 
   Future<void> pickImage() async {
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+    );
 
     if (image != null && mounted) {
       setState(() {
         profileImage = File(image.path);
       });
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profileImage', image.path);
     }
   }
 
@@ -122,9 +123,7 @@ class _CheckState extends State<Check> {
 
       await prefs.setString('name', nameController.text.trim());
 
-      await prefs.setString('username', emailController.text.trim());
 
-      await prefs.setString('password', passwordController.text.trim());
 
       await prefs.setString('fullName', fullNameController.text.trim());
 
@@ -236,9 +235,6 @@ class _CheckState extends State<Check> {
     );
   }
 
-  // =========================
-  // SUCCESS DIALOG
-  // =========================
 
   Future<void> showSuccessAnimation() async {
     final dialogFuture = showDialog<void>(
@@ -380,8 +376,6 @@ class _CheckState extends State<Check> {
   @override
   void dispose() {
     nameController.dispose();
-    emailController.dispose();
-    passwordController.dispose();
 
     fullNameController.dispose();
     addressController.dispose();
@@ -500,43 +494,9 @@ class _CheckState extends State<Check> {
                 },
               ),
 
-              profileField(
-                label: 'EMAIL / USERNAME',
-                controller: emailController,
-                hint: 'Enter email or username',
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your email';
-                  }
 
-                  return null;
-                },
-              ),
 
-              profileField(
-                label: 'PASSWORD',
-                controller: passwordController,
-                obscureText: hidePassword,
-                suffixIcon: TextButton(
-                  onPressed: () {
-                    setState(() {
-                      hidePassword = !hidePassword;
-                    });
-                  },
-                  child: Text(
-                    hidePassword ? 'Show' : 'Hide',
-                    style: const TextStyle(color: Colors.pink, fontSize: 11),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your password';
-                  }
 
-                  return null;
-                },
-              ),
               sectionTitle('Personal Address'),
 
               profileField(
