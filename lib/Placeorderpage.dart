@@ -255,30 +255,52 @@ ClipRRect(
 borderRadius:
 BorderRadius.circular(6),
 
-child: Image.asset(
-product['image']?.toString() ?? '',
-
-width: 80,
-height: 100,
-
-fit: BoxFit.cover,
-
-errorBuilder:
-(context, error, stackTrace) {
-return Container(
-width: 80,
-height: 100,
-
-color:
-Colors.grey.shade200,
-
-child: const Icon(
-Icons.image_not_supported,
-color: Colors.grey,
-),
-);
-},
-),
+  child: product['image']
+      ?.toString()
+      .startsWith('http') ==
+      true
+      ? Image.network(
+    product['image'].toString(),
+    width: 80,
+    height: 100,
+    fit: BoxFit.cover,
+    errorBuilder: (
+        context,
+        error,
+        stackTrace,
+        ) {
+      return Container(
+        width: 80,
+        height: 100,
+        color: Colors.grey.shade200,
+        child: const Icon(
+          Icons.image_not_supported,
+          color: Colors.grey,
+        ),
+      );
+    },
+  )
+      : Image.asset(
+    product['image']?.toString() ?? '',
+    width: 80,
+    height: 100,
+    fit: BoxFit.cover,
+    errorBuilder: (
+        context,
+        error,
+        stackTrace,
+        ) {
+      return Container(
+        width: 80,
+        height: 100,
+        color: Colors.grey.shade200,
+        child: const Icon(
+          Icons.image_not_supported,
+          color: Colors.grey,
+        ),
+      );
+    },
+  ),
 ),
 
 const SizedBox(width: 12),
