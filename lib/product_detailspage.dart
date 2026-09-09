@@ -129,9 +129,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: Image.asset(
+                child: Image.network(
                   widget.product['image'] ?? '',
-
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return const Center(
@@ -629,7 +628,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(10),
               ),
-              child: Image.asset(
+              child: Image.network(
                 product['image'] ?? '',
                 height: 300,
                 width: double.infinity,

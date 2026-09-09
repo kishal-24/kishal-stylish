@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:untitled/bot.dart';
 class str extends StatefulWidget {
   const str({super.key});
-
   @override
   State<str> createState() => _strState();
 }

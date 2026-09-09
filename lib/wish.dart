@@ -5,6 +5,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:untitled/custom_appbar.dart';
 import 'package:untitled/product_detailspage.dart';
 import 'favorite_data.dart';
+import 'api/api_service.dart';
 
 class wish extends StatefulWidget {
   final bool showDiscount;
@@ -28,104 +29,11 @@ class wish extends StatefulWidget {
 
 class _WishState extends State<wish> {
 
-  final List<Map<String, dynamic>> _allProducts = [
-    {
-      'name': 'Black Winter...',
-      'image': 'assets/black.png',
-      'desc': 'Autumn And Winter Casual cotton-padded jacket...',
-      'price': '₹499',
-      'oldPrice': '₹999',
-      'discount': '40%off',
-    },
-    {
-      'name': 'HRX by Hrithik Roshan',
-      'image': 'assets/shirt.png',
-      'desc': 'Autumn And Winter Casual cotton-padded jacket...',
-      'price': '₹799',
-      'oldPrice': '₹1,499',
-      'discount': '40%off',
-    },
-    {
-      'name': 'HRX Sports T-Shirt',
-      'image': 'assets/lady.png',
-      'desc': 'Autumn And Winter Casual cotton-padded jacket...',
-      'price': '₹699',
-      'oldPrice': '₹1,199',
-      'discount': '40%off',
-    },
-    {
-      'name': 'Stylish Casual Wear',
-      'image': 'assets/pink.png',
-      'desc': 'Autumn And Winter Casual cotton-padded jacket...',
-      'price': '₹899',
-      'oldPrice': '₹1,499',
-      'discount': '40%off',
-    },
-    {
-      'name': 'Premium Fashion',
-      'image': 'assets/flare.png',
-      'desc': 'Autumn And Winter Casual cotton-padded jacket...',
-      'price': '₹999',
-      'oldPrice': '₹1,599',
-      'discount': '40%off',
-    },
-    {
-      'name': 'Daily Wear',
-      'image': 'assets/denim.png',
-      'desc': 'Autumn And Winter Casual cotton-padded jacket...',
-      'price': '₹599',
-      'oldPrice': '₹999',
-      'discount': '40%off',
-    },
-    {
-      'name': 'classic shoe',
-      'image': 'assets/product2.png',
-      'desc': 'Autumn And Winter Casual cotton-padded jacket...',
-      'price': '₹799',
-      'oldPrice': '₹1,299',
-      'discount': '40%off',
-    },
-    {
-      'name': 'Classic Collection',
-      'image': 'assets/kurti.jpg',
-      'desc': 'Autumn And Winter Casual cotton-padded jacket...',
-      'price': '₹749',
-      'oldPrice': '₹1,299',
-      'discount': '40%off',
-    },
-    {
-      'name': 'Fashion shoe',
-      'image': 'assets/product2.png',
-      'desc': 'Autumn And Winter Casual cotton-padded jacket...',
-      'price': '₹749',
-      'oldPrice': '₹1,299',
-      'discount': '40%off',
-    },
-    {
-      'name': 'Casual Collection',
-      'image': 'assets/denim.png',
-      'desc': 'Autumn And Winter Casual cotton-padded jacket...',
-      'price': '₹749',
-      'oldPrice': '₹1,299',
-      'discount': '40%off',
-    },
-    {
-      'name': 'Trendy Wear',
-      'image': 'assets/lady.png',
-      'desc': 'Autumn And Winter Casual cotton-padded jacket...',
-      'price': '₹849',
-      'oldPrice': '₹1,399',
-      'discount': '40%off',
-    },
-    {
-      'name': 'Summer Collection',
-      'image': 'assets/kurti.jpg',
-      'desc': 'Autumn And Winter Casual cotton-padded jacket...',
-      'price': '₹699',
-      'oldPrice': '₹1,199',
-      'discount': '40%off',
-    },
-  ];
+
+  final ApiService apiService = ApiService();
+
+  bool isLoading = true;
+  String? errorMessage;
 
 
   List<Map<String, dynamic>> products = [];
@@ -139,23 +47,57 @@ class _WishState extends State<wish> {
   TextEditingController();
 
   String searchText = '';
+
+
+
   @override
   void initState() {
     super.initState();
-    products = List<Map<String, dynamic>>.from(
-      _allProducts,
-    );
 
-    filteredProducts = List<Map<String, dynamic>>.from(
-      _allProducts,
-    );
+    loadProducts();
   }
+
+
+
+  Future<void> loadProducts() async {
+    try {
+      final data = await ApiService.getProducts();
+
+      if (!mounted) return;
+
+      setState(() {
+        products = data;
+
+        filteredProducts =
+        List<Map<String, dynamic>>.from(data);
+
+        isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        errorMessage = e.toString();
+
+        isLoading = false;
+      });
+    }
+  }
+
+  // ============================================================
+  // DISPOSE
+  // ============================================================
 
   @override
   void dispose() {
     searchController.dispose();
+
     super.dispose();
   }
+
+  // ============================================================
+  // SEARCH PRODUCT
+  // ============================================================
 
   void searchProduct(String keyword) {
     final search = keyword.toLowerCase().trim();
@@ -177,11 +119,18 @@ class _WishState extends State<wish> {
     });
   }
 
+  // ============================================================
+  // FAVORITE
+  // ============================================================
+
   void _toggleFavorite(
       Map<String, dynamic> product) {
     FavoriteData.toggleFavorite(product);
   }
 
+  // ============================================================
+  // GET PRICE
+  // ============================================================
 
   double getPrice(
       Map<String, dynamic> product) {
@@ -196,36 +145,39 @@ class _WishState extends State<wish> {
     return double.tryParse(price) ?? 0;
   }
 
+  // ============================================================
+  // FILTER PRODUCTS
+  // ============================================================
 
   void filterProducts(
       double minPrice,
       double maxPrice) {
     setState(() {
-      products = _allProducts.where((product) {
+      products = products.where((product) {
         final double price = getPrice(product);
 
         return price >= minPrice &&
             price <= maxPrice;
       }).toList();
+
       filteredProducts =
       List<Map<String, dynamic>>.from(products);
     });
   }
 
+  // ============================================================
+  // SHOW ALL PRODUCTS
+  // ============================================================
+
   void showAllProducts() {
     setState(() {
-      products =
-      List<Map<String, dynamic>>.from(
-        _allProducts,
-      );
-
-      filteredProducts =
-      List<Map<String, dynamic>>.from(
-        _allProducts,
-      );
+      loadProducts();
     });
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -235,7 +187,69 @@ class _WishState extends State<wish> {
 
       appBar: const CustomAppBar(),
 
-      body: SingleChildScrollView(
+      body: isLoading
+          ? const Center(
+        child: CircularProgressIndicator(),
+      )
+          : errorMessage != null
+          ? Center(
+        child: Padding(
+          padding:
+          const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize:
+            MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 50,
+                color: Colors.red,
+              ),
+
+              const SizedBox(
+                height: 10,
+              ),
+
+              const Text(
+                'Failed to load products',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight:
+                  FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(
+                height: 10,
+              ),
+
+              Text(
+                errorMessage!,
+                textAlign:
+                TextAlign.center,
+              ),
+
+              const SizedBox(
+                height: 20,
+              ),
+
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    isLoading = true;
+                    errorMessage = null;
+                  });
+
+                  loadProducts();
+                },
+                child:
+                const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      )
+          : SingleChildScrollView(
         padding:
         const EdgeInsets.symmetric(
           horizontal: 20,
@@ -243,33 +257,46 @@ class _WishState extends State<wish> {
 
         child: Column(
           children: [
+            const SizedBox(
+              height: 10,
+            ),
 
-            const SizedBox(height: 10),
-
-
+            // ==================================================
+            // SEARCH
+            // ==================================================
 
             TextField(
-              controller: searchController,
+              controller:
+              searchController,
 
               onChanged: (value) {
                 setState(() {
                   searchText = value;
 
                   final String search =
-                  value.toLowerCase().trim();
+                  value
+                      .toLowerCase()
+                      .trim();
 
                   if (search.isEmpty) {
                     suggestions = [];
                   } else {
                     suggestions =
-                        products.where((product) {
-                          final String name =
-                          product['name']
-                              .toString()
-                              .toLowerCase();
+                        products
+                            .where(
+                              (product) {
+                            final String
+                            name =
+                            product[
+                            'name']
+                                .toString()
+                                .toLowerCase();
 
-                          return name.contains(search);
-                        }).toList();
+                            return name
+                                .contains(
+                                search);
+                          },
+                        ).toList();
                   }
                 });
               },
@@ -278,26 +305,38 @@ class _WishState extends State<wish> {
                 searchProduct(value);
               },
 
-              decoration: InputDecoration(
-                hintText: 'Search products',
+              decoration:
+              InputDecoration(
+                hintText:
+                'Search products',
 
                 prefixIcon:
-                const Icon(Icons.search),
+                const Icon(
+                  Icons.search,
+                ),
 
-                suffixIcon: IconButton(
+                suffixIcon:
+                IconButton(
                   icon:
-                  const Icon(Icons.close),
+                  const Icon(
+                    Icons.close,
+                  ),
 
                   onPressed: () {
-                    searchController.clear();
+                    searchController
+                        .clear();
 
                     setState(() {
-                      searchText = '';
+                      searchText =
+                      '';
 
-                      suggestions = [];
+                      suggestions =
+                      [];
 
                       filteredProducts =
-                      List<Map<String, dynamic>>.from(
+                      List<
+                          Map<String,
+                              dynamic>>.from(
                         products,
                       );
                     });
@@ -307,16 +346,25 @@ class _WishState extends State<wish> {
                 border:
                 OutlineInputBorder(
                   borderRadius:
-                  BorderRadius.circular(10),
+                  BorderRadius
+                      .circular(
+                    10,
+                  ),
                 ),
               ),
             ),
 
-            if (suggestions.isNotEmpty &&
+            // ==================================================
+            // SEARCH SUGGESTIONS
+            // ==================================================
+
+            if (suggestions
+                .isNotEmpty &&
                 searchText.isNotEmpty)
               Container(
                 margin:
-                const EdgeInsets.symmetric(
+                const EdgeInsets
+                    .symmetric(
                   horizontal: 10,
                 ),
 
@@ -325,45 +373,57 @@ class _WishState extends State<wish> {
                   color: Colors.white,
 
                   borderRadius:
-                  BorderRadius.circular(10),
+                  BorderRadius
+                      .circular(
+                    10,
+                  ),
 
-                  boxShadow: const [
+                  boxShadow:
+                  const [
                     BoxShadow(
                       blurRadius: 5,
-                      color: Colors.black12,
+                      color:
+                      Colors.black12,
                     ),
                   ],
                 ),
 
-                child: ListView.builder(
+                child:
+                ListView.builder(
                   shrinkWrap: true,
 
                   physics:
                   const NeverScrollableScrollPhysics(),
 
                   itemCount:
-                  suggestions.length,
+                  suggestions
+                      .length,
 
                   itemBuilder:
-                      (context, index) {
-
-                    final Map<String, dynamic>
+                      (context,
+                      index) {
+                    final Map<String,
+                        dynamic>
                     product =
-                    suggestions[index];
+                    suggestions[
+                    index];
 
                     return ListTile(
                       title: Text(
-                        product['name']
+                        product[
+                        'name']
                             .toString(),
                       ),
 
                       onTap: () {
                         final String
                         productName =
-                        product['name']
+                        product[
+                        'name']
                             .toString();
 
-                        searchController.text =
+                        searchController
+                            .text =
                             productName;
 
                         searchProduct(
@@ -373,7 +433,8 @@ class _WishState extends State<wish> {
                           searchText =
                               productName;
 
-                          suggestions = [];
+                          suggestions =
+                          [];
                         });
                       },
                     );
@@ -381,35 +442,43 @@ class _WishState extends State<wish> {
                 ),
               ),
 
-            const SizedBox(height: 20),
+            const SizedBox(
+              height: 20,
+            ),
 
-
+            // ==================================================
+            // ITEM COUNT + SORT + FILTER
+            // ==================================================
 
             Row(
               mainAxisAlignment:
-              MainAxisAlignment.spaceBetween,
+              MainAxisAlignment
+                  .spaceBetween,
 
               children: [
+                Text(
+                  '${filteredProducts.length} Items',
 
-                const Text(
-                  '52,082+ Items',
-
-                  style: TextStyle(
+                  style:
+                  const TextStyle(
                     fontSize: 22,
                     fontWeight:
-                    FontWeight.w900,
+                    FontWeight
+                        .w900,
                   ),
                 ),
 
                 Row(
                   children: [
-
+                    // ==========================================
+                    // SORT
+                    // ==========================================
 
                     GestureDetector(
                       onTap: () {
-
                         showModalBottomSheet(
-                          context: context,
+                          context:
+                          context,
 
                           backgroundColor:
                           Colors.white,
@@ -419,36 +488,39 @@ class _WishState extends State<wish> {
                             borderRadius:
                             BorderRadius.vertical(
                               top:
-                              Radius.circular(20),
+                              Radius.circular(
+                                20,
+                              ),
                             ),
                           ),
 
                           builder:
                               (context) {
-
                             return Padding(
                               padding:
-                              const EdgeInsets.all(
+                              const EdgeInsets
+                                  .all(
                                 20,
                               ),
 
-                              child: Column(
+                              child:
+                              Column(
                                 mainAxisSize:
-                                MainAxisSize.min,
+                                MainAxisSize
+                                    .min,
 
                                 crossAxisAlignment:
                                 CrossAxisAlignment
                                     .start,
 
                                 children: [
-
                                   Text(
                                     'Sort By',
 
-                                    style:
-                                    GoogleFonts
+                                    style: GoogleFonts
                                         .poppins(
-                                      fontSize: 20,
+                                      fontSize:
+                                      20,
                                       fontWeight:
                                       FontWeight
                                           .bold,
@@ -456,9 +528,11 @@ class _WishState extends State<wish> {
                                   ),
 
                                   const SizedBox(
-                                      height: 15),
+                                    height:
+                                    15,
+                                  ),
 
-
+                                  // LOW TO HIGH
                                   ListTile(
                                     leading:
                                     const Icon(
@@ -471,33 +545,30 @@ class _WishState extends State<wish> {
                                       'Price: Low to High',
                                     ),
 
-                                    onTap: () {
-                                      setState(() {
-                                        products.sort(
-                                              (a, b) =>
-                                              getPrice(
-                                                a,
-                                              ).compareTo(
-                                                getPrice(
-                                                  b,
-                                                ),
-                                              ),
-                                        );
+                                    onTap:
+                                        () {
+                                      setState(
+                                              () {
+                                            products
+                                                .sort(
+                                                  (a, b) =>
+                                                  getPrice(a).compareTo(
+                                                    getPrice(b),
+                                                  ),
+                                            );
 
-                                        filteredProducts =
-                                        List<
-                                            Map<String,
-                                                dynamic>>.from(
-                                          products,
-                                        );
-                                      });
+                                            filteredProducts =
+                                            List<Map<String, dynamic>>.from(
+                                              products,
+                                            );
+                                          });
 
                                       Navigator.pop(
                                           context);
                                     },
                                   ),
 
-
+                                  // HIGH TO LOW
                                   ListTile(
                                     leading:
                                     const Icon(
@@ -510,33 +581,30 @@ class _WishState extends State<wish> {
                                       'Price: High to Low',
                                     ),
 
-                                    onTap: () {
-                                      setState(() {
-                                        products.sort(
-                                              (a, b) =>
-                                              getPrice(
-                                                b,
-                                              ).compareTo(
-                                                getPrice(
-                                                  a,
-                                                ),
-                                              ),
-                                        );
+                                    onTap:
+                                        () {
+                                      setState(
+                                              () {
+                                            products
+                                                .sort(
+                                                  (a, b) =>
+                                                  getPrice(b).compareTo(
+                                                    getPrice(a),
+                                                  ),
+                                            );
 
-                                        filteredProducts =
-                                        List<
-                                            Map<String,
-                                                dynamic>>.from(
-                                          products,
-                                        );
-                                      });
+                                            filteredProducts =
+                                            List<Map<String, dynamic>>.from(
+                                              products,
+                                            );
+                                          });
 
                                       Navigator.pop(
                                           context);
                                     },
                                   ),
 
-
+                                  // A TO Z
                                   ListTile(
                                     leading:
                                     const Icon(
@@ -549,32 +617,30 @@ class _WishState extends State<wish> {
                                       'Name: A to Z',
                                     ),
 
-                                    onTap: () {
-                                      setState(() {
-                                        products.sort(
-                                              (a, b) =>
-                                              a['name']
-                                                  .toString()
-                                                  .compareTo(
-                                                b['name']
-                                                    .toString(),
-                                              ),
-                                        );
+                                    onTap:
+                                        () {
+                                      setState(
+                                              () {
+                                            products
+                                                .sort(
+                                                  (a, b) =>
+                                                  a['name'].toString().compareTo(
+                                                    b['name'].toString(),
+                                                  ),
+                                            );
 
-                                        filteredProducts =
-                                        List<
-                                            Map<String,
-                                                dynamic>>.from(
-                                          products,
-                                        );
-                                      });
+                                            filteredProducts =
+                                            List<Map<String, dynamic>>.from(
+                                              products,
+                                            );
+                                          });
 
                                       Navigator.pop(
                                           context);
                                     },
                                   ),
 
-
+                                  // Z TO A
                                   ListTile(
                                     leading:
                                     const Icon(
@@ -587,25 +653,23 @@ class _WishState extends State<wish> {
                                       'Name: Z to A',
                                     ),
 
-                                    onTap: () {
-                                      setState(() {
-                                        products.sort(
-                                              (a, b) =>
-                                              b['name']
-                                                  .toString()
-                                                  .compareTo(
-                                                a['name']
-                                                    .toString(),
-                                              ),
-                                        );
+                                    onTap:
+                                        () {
+                                      setState(
+                                              () {
+                                            products
+                                                .sort(
+                                                  (a, b) =>
+                                                  b['name'].toString().compareTo(
+                                                    a['name'].toString(),
+                                                  ),
+                                            );
 
-                                        filteredProducts =
-                                        List<
-                                            Map<String,
-                                                dynamic>>.from(
-                                          products,
-                                        );
-                                      });
+                                            filteredProducts =
+                                            List<Map<String, dynamic>>.from(
+                                              products,
+                                            );
+                                          });
 
                                       Navigator.pop(
                                           context);
@@ -618,51 +682,69 @@ class _WishState extends State<wish> {
                         );
                       },
 
-                      child: Container(
+                      child:
+                      Container(
                         padding:
-                        const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 10,
+                        const EdgeInsets
+                            .symmetric(
+                          horizontal:
+                          10,
+                          vertical:
+                          10,
                         ),
 
                         decoration:
                         BoxDecoration(
-                          color: Colors.white,
+                          color:
+                          Colors.white,
 
                           borderRadius:
-                          BorderRadius.circular(
+                          BorderRadius
+                              .circular(
                             15,
                           ),
 
-                          boxShadow: const [
+                          boxShadow:
+                          const [
                             BoxShadow(
                               color:
-                              Color(0x14000000),
-                              blurRadius: 10,
+                              Color(
+                                0x14000000,
+                              ),
+                              blurRadius:
+                              10,
                               offset:
-                              Offset(0, 4),
+                              Offset(
+                                0,
+                                4,
+                              ),
                             ),
                           ],
                         ),
 
-                        child: const Row(
+                        child:
+                        const Row(
                           children: [
-
                             Text(
                               'sort',
 
-                              style: TextStyle(
-                                fontSize: 15,
+                              style:
+                              TextStyle(
+                                fontSize:
+                                15,
                                 fontWeight:
                                 FontWeight
                                     .bold,
                               ),
                             ),
 
-                            SizedBox(width: 5),
+                            SizedBox(
+                              width: 5,
+                            ),
 
                             Icon(
-                              Icons.arrow_forward,
+                              Icons
+                                  .arrow_forward,
                               size: 20,
                             ),
                           ],
@@ -670,13 +752,19 @@ class _WishState extends State<wish> {
                       ),
                     ),
 
-                    const SizedBox(width: 10),
+                    const SizedBox(
+                      width: 10,
+                    ),
+
+                    // ==========================================
+                    // FILTER
+                    // ==========================================
 
                     GestureDetector(
                       onTap: () {
-
                         showModalBottomSheet(
-                          context: context,
+                          context:
+                          context,
 
                           backgroundColor:
                           Colors.white,
@@ -686,36 +774,39 @@ class _WishState extends State<wish> {
                             borderRadius:
                             BorderRadius.vertical(
                               top:
-                              Radius.circular(15),
+                              Radius.circular(
+                                15,
+                              ),
                             ),
                           ),
 
                           builder:
                               (context) {
-
                             return Padding(
                               padding:
-                              const EdgeInsets.all(
+                              const EdgeInsets
+                                  .all(
                                 20,
                               ),
 
-                              child: Column(
+                              child:
+                              Column(
                                 mainAxisSize:
-                                MainAxisSize.min,
+                                MainAxisSize
+                                    .min,
 
                                 crossAxisAlignment:
                                 CrossAxisAlignment
                                     .start,
 
                                 children: [
-
                                   Text(
                                     'Filter',
 
-                                    style:
-                                    GoogleFonts
+                                    style: GoogleFonts
                                         .poppins(
-                                      fontSize: 25,
+                                      fontSize:
+                                      25,
                                       fontWeight:
                                       FontWeight
                                           .bold,
@@ -723,7 +814,10 @@ class _WishState extends State<wish> {
                                   ),
 
                                   const SizedBox(
-                                      height: 15),
+                                    height:
+                                    15,
+                                  ),
+
                                   ListTile(
                                     leading:
                                     const Icon(
@@ -736,7 +830,8 @@ class _WishState extends State<wish> {
                                       '₹200 to ₹300',
                                     ),
 
-                                    onTap: () {
+                                    onTap:
+                                        () {
                                       filterProducts(
                                         200,
                                         300,
@@ -746,6 +841,7 @@ class _WishState extends State<wish> {
                                           context);
                                     },
                                   ),
+
                                   ListTile(
                                     leading:
                                     const Icon(
@@ -758,7 +854,8 @@ class _WishState extends State<wish> {
                                       '₹300 to ₹1,000',
                                     ),
 
-                                    onTap: () {
+                                    onTap:
+                                        () {
                                       filterProducts(
                                         300,
                                         1000,
@@ -781,7 +878,8 @@ class _WishState extends State<wish> {
                                       '₹1,000 to ₹10,000',
                                     ),
 
-                                    onTap: () {
+                                    onTap:
+                                        () {
                                       filterProducts(
                                         1000,
                                         10000,
@@ -793,7 +891,6 @@ class _WishState extends State<wish> {
                                   ),
 
                                   const Divider(),
-
 
                                   ListTile(
                                     leading:
@@ -812,16 +909,16 @@ class _WishState extends State<wish> {
                                         color:
                                         Colors.red,
                                         fontWeight:
-                                        FontWeight
-                                            .bold,
+                                        FontWeight.bold,
                                       ),
                                     ),
 
-                                    onTap: () {
-                                      showAllProducts();
-
+                                    onTap:
+                                        () {
                                       Navigator.pop(
                                           context);
+
+                                      loadProducts();
                                     },
                                   ),
                                 ],
@@ -831,48 +928,65 @@ class _WishState extends State<wish> {
                         );
                       },
 
-                      child: Container(
+                      child:
+                      Container(
                         padding:
-                        const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 10,
+                        const EdgeInsets
+                            .symmetric(
+                          horizontal:
+                          10,
+                          vertical:
+                          10,
                         ),
 
                         decoration:
                         BoxDecoration(
-                          color: Colors.white,
+                          color:
+                          Colors.white,
 
                           borderRadius:
-                          BorderRadius.circular(
+                          BorderRadius
+                              .circular(
                             15,
                           ),
 
-                          boxShadow: const [
+                          boxShadow:
+                          const [
                             BoxShadow(
                               color:
-                              Color(0x14000000),
-                              blurRadius: 10,
+                              Color(
+                                0x14000000,
+                              ),
+                              blurRadius:
+                              10,
                               offset:
-                              Offset(0, 4),
+                              Offset(
+                                0,
+                                4,
+                              ),
                             ),
                           ],
                         ),
 
-                        child: const Row(
+                        child:
+                        const Row(
                           children: [
-
                             Text(
                               'Filter',
 
-                              style: TextStyle(
-                                fontSize: 15,
+                              style:
+                              TextStyle(
+                                fontSize:
+                                15,
                                 fontWeight:
                                 FontWeight
                                     .bold,
                               ),
                             ),
 
-                            SizedBox(width: 5),
+                            SizedBox(
+                              width: 5,
+                            ),
 
                             Icon(
                               Icons
@@ -888,8 +1002,13 @@ class _WishState extends State<wish> {
               ],
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(
+              height: 20,
+            ),
 
+            // ==================================================
+            // PRODUCT GRID
+            // ==================================================
 
             MasonryGridView.count(
               shrinkWrap: true,
@@ -904,14 +1023,16 @@ class _WishState extends State<wish> {
               crossAxisSpacing: 10,
 
               itemCount:
-              filteredProducts.length,
+              filteredProducts
+                  .length,
 
               itemBuilder:
                   (context, index) {
-
-                final Map<String, dynamic>
+                final Map<String,
+                    dynamic>
                 product =
-                filteredProducts[index];
+                filteredProducts[
+                index];
 
                 return productCard(
                   product,
@@ -920,18 +1041,22 @@ class _WishState extends State<wish> {
               },
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(
+              height: 30,
+            ),
           ],
         ),
       ),
     );
   }
 
+  // ============================================================
+  // PRODUCT CARD
+  // ============================================================
+
   Widget productCard(
       Map<String, dynamic> product,
-      int index,
-      ) {
-
+      int index) {
     return ValueListenableBuilder<
         List<Map<String, dynamic>>>(
       valueListenable:
@@ -939,7 +1064,6 @@ class _WishState extends State<wish> {
 
       builder:
           (context, favorites, child) {
-
         final bool isEven =
             index.isEven;
 
@@ -948,17 +1072,14 @@ class _WishState extends State<wish> {
 
         return GestureDetector(
           onTap: () {
-
             Navigator.push(
               context,
-
               MaterialPageRoute(
                 builder: (context) =>
                     ProductDetailsPage(
                       product: product,
 
-                      allProducts:
-                      _allProducts,
+                      allProducts: products,
                     ),
               ),
             );
@@ -974,8 +1095,8 @@ class _WishState extends State<wish> {
 
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black
-                      .withValues(
+                  color:
+                  Colors.black.withValues(
                     alpha: 0.08,
                   ),
 
@@ -992,22 +1113,23 @@ class _WishState extends State<wish> {
               CrossAxisAlignment.start,
 
               children: [
-
-
+                // ======================================================
+                // PRODUCT IMAGE
+                // ======================================================
 
                 Stack(
                   children: [
-
                     ClipRRect(
                       borderRadius:
-                      const BorderRadius.only(
+                      const BorderRadius
+                          .only(
                         topLeft:
                         Radius.circular(8),
                         topRight:
                         Radius.circular(8),
                       ),
 
-                      child: Image.asset(
+                      child: Image.network(
                         product['image']
                             ?.toString() ??
                             '',
@@ -1020,10 +1142,68 @@ class _WishState extends State<wish> {
 
                         fit:
                         BoxFit.cover,
+
+                        loadingBuilder:
+                            (
+                            context,
+                            child,
+                            loadingProgress,
+                            ) {
+                          if (loadingProgress ==
+                              null) {
+                            return child;
+                          }
+
+                          return SizedBox(
+                            width:
+                            double.infinity,
+
+                            height:
+                            isEven
+                                ? 350
+                                : 200,
+
+                            child:
+                            const Center(
+                              child:
+                              CircularProgressIndicator(),
+                            ),
+                          );
+                        },
+
+                        errorBuilder:
+                            (
+                            context,
+                            error,
+                            stackTrace,
+                            ) {
+                          return SizedBox(
+                            width:
+                            double.infinity,
+
+                            height:
+                            isEven
+                                ? 350
+                                : 200,
+
+                            child:
+                            const Center(
+                              child: Icon(
+                                Icons
+                                    .image_not_supported,
+                                size: 50,
+                                color:
+                                Colors.grey,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
 
-
+                    // ==================================================
+                    // FAVORITE BUTTON
+                    // ==================================================
 
                     Positioned(
                       top: 10,
@@ -1036,7 +1216,8 @@ class _WishState extends State<wish> {
                               product);
                         },
 
-                        child: Container(
+                        child:
+                        Container(
                           width: 42,
                           height: 42,
 
@@ -1046,7 +1227,8 @@ class _WishState extends State<wish> {
                             Colors.white,
 
                             shape:
-                            BoxShape.circle,
+                            BoxShape
+                                .circle,
 
                             boxShadow: [
                               BoxShadow(
@@ -1063,12 +1245,12 @@ class _WishState extends State<wish> {
 
                           child: Icon(
                             isFavorite
-                                ? Icons.favorite
+                                ? Icons
+                                .favorite
                                 : Icons
                                 .favorite_border,
 
-                            color:
-                            isFavorite
+                            color: isFavorite
                                 ? Colors.pink
                                 : Colors.black,
 
@@ -1080,6 +1262,9 @@ class _WishState extends State<wish> {
                   ],
                 ),
 
+                // ======================================================
+                // PRODUCT DETAILS
+                // ======================================================
 
                 Padding(
                   padding:
@@ -1091,7 +1276,7 @@ class _WishState extends State<wish> {
                         .start,
 
                     children: [
-
+                      // PRODUCT NAME
                       Text(
                         product['name']
                             ?.toString() ??
@@ -1112,13 +1297,13 @@ class _WishState extends State<wish> {
                         ),
                       ),
 
+                      // PRICE ROW
                       Row(
                         crossAxisAlignment:
                         CrossAxisAlignment
                             .start,
 
                         children: [
-
                           if (widget
                               .showDiscount)
                             Text(
@@ -1199,11 +1384,10 @@ class _WishState extends State<wish> {
                         ],
                       ),
 
-
+                      // RATING
                       if (widget.showRating)
                         Row(
                           children: [
-
                             const Icon(
                               Icons.star,
                               color:
@@ -1240,10 +1424,14 @@ class _WishState extends State<wish> {
                             ),
 
                             const SizedBox(
-                                width: 8),
+                              width: 8,
+                            ),
 
                             Text(
-                              '4.0',
+                              product[
+                              'rating']
+                                  ?.toString() ??
+                                  '4.0',
 
                               style: GoogleFonts
                                   .poppins(
@@ -1257,7 +1445,7 @@ class _WishState extends State<wish> {
                           ],
                         ),
 
-
+                      // DESCRIPTION
                       if (widget
                           .showDescription)
                         Padding(
@@ -1268,7 +1456,8 @@ class _WishState extends State<wish> {
                           ),
 
                           child: Text(
-                            product['desc']
+                            product[
+                            'desc']
                                 ?.toString() ??
                                 '',
 
