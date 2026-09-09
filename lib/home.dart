@@ -7,6 +7,7 @@ import 'package:untitled/wish.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:untitled/favorite_data.dart';
 
+import 'api/api_service.dart';
 import 'dash.dart';
 
 class home extends StatefulWidget {
@@ -19,32 +20,93 @@ class home extends StatefulWidget {
 class _homeState extends State<home> {
   String selectedsort = '';
   String selectedfilter = '';
-  final List<Map<String, dynamic>> _allProducts = [
-    {
-      'name': 'Women Printed Kurta',
-      'image': 'assets/kurti.jpg',
-      'desc': 'Neque porro quisquam est qui dolorem ipsum quia',
-      'price': '₹499',
-      'oldPrice': '₹999',
-      'discount': '40%off',
-    },
-    {
-      'name': 'HRX by Hrithik Roshan',
-      'image': 'assets/product2.png',
-      'desc': 'Neque porro quisquam est qui dolorem ipsum quia',
-      'price': '₹799',
-      'oldPrice': '₹1,499',
-      'discount': '40%off',
-    },
-  ];
   List<Map<String, dynamic>> products = [];
 
+  bool isLoading = true;
+  String errorMessage = '';
+
+  final ApiService apiService = ApiService();
+
+  @override
   @override
   void initState() {
     super.initState();
-    products = List.from(_allProducts);
+    loadHomeProducts();
   }
+  Widget buildProductImage(
+      String image, {
+        double height = 200,
+      }) {
+    if (image.startsWith('http://') ||
+        image.startsWith('https://')) {
+      return Image.network(
+        image,
+        width: double.infinity,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (
+            context,
+            error,
+            stackTrace,
+            ) {
+          return Container(
+            width: double.infinity,
+            height: height,
+            color: Colors.grey.shade200,
+            child: const Icon(
+              Icons.image_not_supported,
+              color: Colors.grey,
+            ),
+          );
+        },
+      );
+    }
 
+    return Image.asset(
+      image,
+      width: double.infinity,
+      height: height,
+      fit: BoxFit.cover,
+      errorBuilder: (
+          context,
+          error,
+          stackTrace,
+          ) {
+        return Container(
+          width: double.infinity,
+          height: height,
+          color: Colors.grey.shade200,
+          child: const Icon(
+            Icons.image_not_supported,
+            color: Colors.grey,
+          ),
+        );
+      },
+    );
+  }
+  Future<void> loadHomeProducts() async {
+    try {
+      final result = await ApiService.getProducts(
+
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        products = result.take(6).toList();
+
+        isLoading = false;
+        errorMessage = '';
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+        errorMessage = e.toString();
+      });
+    }
+  }
   final List<Map<String, dynamic>> small = [
     {
       'name': 'Pilots Watch',
@@ -73,7 +135,7 @@ class _homeState extends State<home> {
 
   void filterProducts(double min, double max) {
     setState(() {
-      products = _allProducts.where((product) {
+      products = products.where((product) {
         double price = getPrice(product);
         return price >= min && price <= max;
       }).toList();
@@ -82,7 +144,7 @@ class _homeState extends State<home> {
 
   void showAllProducts() {
     setState(() {
-      products = List.from(_allProducts);
+      products = List.from(products);
     });
   }
 
@@ -851,7 +913,7 @@ class _homeState extends State<home> {
               MaterialPageRoute(
                 builder: (context) => ProductDetailsPage(
                   product: product,
-                  allProducts: _allProducts,
+                  allProducts: products,
                 ),
               ),
             );
@@ -887,11 +949,8 @@ class _homeState extends State<home> {
                         top: Radius.circular(10),
                       ),
 
-                      child: Image.asset(
-                        product['image'] ?? '',
-                        width: double.infinity,
-                        height: 200,
-                        fit: BoxFit.cover,
+                      child: buildProductImage(
+                        product['image']?.toString() ?? '',
                       ),
                     ),
                     Positioned(
@@ -1033,7 +1092,7 @@ class _homeState extends State<home> {
 
           MaterialPageRoute(
             builder: (context) =>
-                ProductDetailsPage(product: product, allProducts: _allProducts),
+                ProductDetailsPage(product: product, allProducts: products),
           ),
         );
       },

@@ -11,9 +11,9 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  bool isSendingCart = false;
-
-
+  // ============================================================
+  // GET PRODUCT PRICE
+  // ============================================================
 
   double getProductPrice(
       Map<String, dynamic> product,
@@ -29,6 +29,9 @@ class _CartPageState extends State<CartPage> {
     return double.tryParse(priceText) ?? 0;
   }
 
+  // ============================================================
+  // GET PRODUCT QUANTITY
+  // ============================================================
 
   int getProductQuantity(
       Map<String, dynamic> product,
@@ -39,7 +42,9 @@ class _CartPageState extends State<CartPage> {
         1;
   }
 
-
+  // ============================================================
+  // TOTAL PRICE
+  // ============================================================
 
   double get totalPrice {
     double total = 0;
@@ -57,7 +62,10 @@ class _CartPageState extends State<CartPage> {
     return total;
   }
 
-
+  // ============================================================
+  // PRODUCT IMAGE
+  // Supports API URL + local asset
+  // ============================================================
 
   Widget productImage(
       Map<String, dynamic> item,
@@ -65,13 +73,12 @@ class _CartPageState extends State<CartPage> {
     final String image =
         item['image']?.toString() ?? '';
 
+    // API IMAGE
     if (image.startsWith('http')) {
       return Image.network(
         image,
-
         width: 90,
         height: 110,
-
         fit: BoxFit.cover,
 
         loadingBuilder:
@@ -96,12 +103,11 @@ class _CartPageState extends State<CartPage> {
       );
     }
 
+    // LOCAL IMAGE
     return Image.asset(
       image,
-
       width: 90,
       height: 110,
-
       fit: BoxFit.cover,
 
       errorBuilder:
@@ -111,14 +117,15 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
+  // ============================================================
+  // IMAGE ERROR
+  // ============================================================
 
   Widget imageError() {
     return Container(
       width: 90,
       height: 110,
-
       color: Colors.grey[200],
-
       child: const Icon(
         Icons.image_not_supported,
         color: Colors.grey,
@@ -126,120 +133,88 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  // ==========================================
-  // INCREASE
-  // ==========================================
+  // ============================================================
+  // INCREASE QUANTITY
+  // ============================================================
 
   void increaseQuantity(int index) {
+    if (index < 0 ||
+        index >= cart.cartItems.length) {
+      return;
+    }
+
     setState(() {
       cart.increaseQuantity(index);
     });
   }
 
-  // ==========================================
-  // DECREASE
-  // ==========================================
+  // ============================================================
+  // DECREASE QUANTITY
+  // ============================================================
 
   void decreaseQuantity(int index) {
+    if (index < 0 ||
+        index >= cart.cartItems.length) {
+      return;
+    }
+
     setState(() {
       cart.decreaseQuantity(index);
     });
   }
 
-  // ==========================================
-  // REMOVE
-  // ==========================================
+  // ============================================================
+  // REMOVE ITEM
+  // ============================================================
 
   void removeItem(int index) {
+    if (index < 0 ||
+        index >= cart.cartItems.length) {
+      return;
+    }
+
     setState(() {
       cart.removeFromCart(index);
     });
   }
 
-  // ==========================================
+  // ============================================================
   // PROCEED TO CHECKOUT
-  // ==========================================
+  // ============================================================
 
-  Future<void> proceedToCheckout() async {
+  void proceedToCheckout() {
     if (cart.cartItems.isEmpty) {
-      return;
-    }
-
-    setState(() {
-      isSendingCart = true;
-    });
-
-    try {
-      final result =
-      await cart.syncCartToApi();
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        isSendingCart = false;
-      });
-
-      if (result != null) {
-        print(
-          '============================',
-        );
-
-        print('CART CREATED SUCCESSFULLY');
-
-        print(result);
-
-        print(
-          '============================',
-        );
-
-        Navigator.push(
-          context,
-
-          MaterialPageRoute(
-            builder: (context) =>
-            const checkout(),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Unable to connect to cart API',
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        isSendingCart = false;
-      });
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
           content: Text(
-            'Error: $e',
+            'Your cart is empty',
           ),
         ),
       );
+
+      return;
     }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const checkout(),
+      ),
+    );
   }
 
-  // ==========================================
+  // ============================================================
   // BUILD
-  // ==========================================
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
+      // ========================================================
+      // APP BAR
+      // ========================================================
 
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -263,6 +238,10 @@ class _CartPageState extends State<CartPage> {
         ),
       ),
 
+      // ========================================================
+      // BODY
+      // ========================================================
+
       body: cart.cartItems.isEmpty
           ? const Center(
         child: Column(
@@ -273,13 +252,13 @@ class _CartPageState extends State<CartPage> {
             Icon(
               Icons
                   .shopping_cart_outlined,
-
               size: 80,
-
               color: Colors.grey,
             ),
 
-            SizedBox(height: 15),
+            SizedBox(
+              height: 15,
+            ),
 
             Text(
               'Your cart is empty',
@@ -291,7 +270,9 @@ class _CartPageState extends State<CartPage> {
               ),
             ),
 
-            SizedBox(height: 5),
+            SizedBox(
+              height: 5,
+            ),
 
             Text(
               'Add some products to your cart',
@@ -305,9 +286,9 @@ class _CartPageState extends State<CartPage> {
       )
           : Column(
         children: [
-          // ==================================
+          // ==================================================
           // CART LIST
-          // ==================================
+          // ==================================================
 
           Expanded(
             child: ListView.builder(
@@ -345,8 +326,12 @@ class _CartPageState extends State<CartPage> {
                     boxShadow: const [
                       BoxShadow(
                         color:
-                        Color(0x1A000000),
+                        Color(
+                          0x1A000000,
+                        ),
+
                         blurRadius: 6,
+
                         offset:
                         Offset(0, 2),
                       ),
@@ -355,6 +340,8 @@ class _CartPageState extends State<CartPage> {
 
                   child: Row(
                     children: [
+
+
                       ClipRRect(
                         borderRadius:
                         BorderRadius
@@ -372,6 +359,8 @@ class _CartPageState extends State<CartPage> {
                         width: 12,
                       ),
 
+
+
                       Expanded(
                         child: Column(
                           crossAxisAlignment:
@@ -379,6 +368,7 @@ class _CartPageState extends State<CartPage> {
                               .start,
 
                           children: [
+                            // NAME
                             Text(
                               item['name']
                                   ?.toString() ??
@@ -403,6 +393,7 @@ class _CartPageState extends State<CartPage> {
                               height: 8,
                             ),
 
+                            // PRICE
                             Text(
                               item['price']
                                   ?.toString() ??
@@ -425,6 +416,7 @@ class _CartPageState extends State<CartPage> {
                               height: 3,
                             ),
 
+                            // DESCRIPTION
                             Text(
                               item['desc']
                                   ?.toString() ??
@@ -448,6 +440,10 @@ class _CartPageState extends State<CartPage> {
                             const SizedBox(
                               height: 10,
                             ),
+
+                            // ==================================================
+                            // QUANTITY
+                            // ==================================================
 
                             Row(
                               children: [
@@ -477,7 +473,8 @@ class _CartPageState extends State<CartPage> {
                                     EdgeInsets
                                         .zero,
 
-                                    onPressed: () {
+                                    onPressed:
+                                        () {
                                       decreaseQuantity(
                                         index,
                                       );
@@ -495,6 +492,7 @@ class _CartPageState extends State<CartPage> {
                                   width: 12,
                                 ),
 
+                                // QUANTITY TEXT
                                 Text(
                                   '${item['quantity'] ?? 1}',
 
@@ -537,7 +535,8 @@ class _CartPageState extends State<CartPage> {
                                     EdgeInsets
                                         .zero,
 
-                                    onPressed: () {
+                                    onPressed:
+                                        () {
                                       increaseQuantity(
                                         index,
                                       );
@@ -556,6 +555,10 @@ class _CartPageState extends State<CartPage> {
                         ),
                       ),
 
+                      // ==================================================
+                      // DELETE
+                      // ==================================================
+
                       IconButton(
                         onPressed: () {
                           removeItem(index);
@@ -565,9 +568,7 @@ class _CartPageState extends State<CartPage> {
                         const Icon(
                           Icons
                               .delete_outline,
-
-                          color:
-                          Colors.red,
+                          color: Colors.red,
                         ),
                       ),
                     ],
@@ -577,13 +578,15 @@ class _CartPageState extends State<CartPage> {
             ),
           ),
 
-          // ==================================
+          // ==================================================
           // BOTTOM TOTAL
-          // ==================================
+          // ==================================================
 
           Container(
             padding:
-            const EdgeInsets.all(20),
+            const EdgeInsets.all(
+              20,
+            ),
 
             decoration:
             const BoxDecoration(
@@ -592,8 +595,12 @@ class _CartPageState extends State<CartPage> {
               boxShadow: [
                 BoxShadow(
                   color:
-                  Color(0x1A000000),
+                  Color(
+                    0x1A000000,
+                  ),
+
                   blurRadius: 8,
+
                   offset:
                   Offset(0, -2),
                 ),
@@ -602,6 +609,10 @@ class _CartPageState extends State<CartPage> {
 
             child: Column(
               children: [
+                // ==================================================
+                // TOTAL
+                // ==================================================
+
                 Row(
                   mainAxisAlignment:
                   MainAxisAlignment
@@ -614,7 +625,8 @@ class _CartPageState extends State<CartPage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight:
-                        FontWeight.bold,
+                        FontWeight
+                            .bold,
                       ),
                     ),
 
@@ -639,6 +651,7 @@ class _CartPageState extends State<CartPage> {
                   height: 15,
                 ),
 
+
                 SizedBox(
                   width: double.infinity,
 
@@ -647,9 +660,7 @@ class _CartPageState extends State<CartPage> {
                   child:
                   ElevatedButton(
                     onPressed:
-                    isSendingCart
-                        ? null
-                        : proceedToCheckout,
+                    proceedToCheckout,
 
                     style:
                     ElevatedButton.styleFrom(
@@ -672,29 +683,14 @@ class _CartPageState extends State<CartPage> {
                     ),
 
                     child:
-                    isSendingCart
-                        ? const SizedBox(
-                      width: 24,
-                      height: 24,
-
-                      child:
-                      CircularProgressIndicator(
-                        color:
-                        Colors.white,
-                        strokeWidth:
-                        2,
-                      ),
-                    )
-                        : const Text(
+                    const Text(
                       'Proceed to Checkout',
 
                       style:
                       TextStyle(
-                        fontSize:
-                        16,
+                        fontSize: 16,
                         fontWeight:
-                        FontWeight
-                            .bold,
+                        FontWeight.bold,
                       ),
                     ),
                   ),
