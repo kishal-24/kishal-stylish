@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:untitled/screens/forget.dart';
 import 'package:untitled/screens/sign.dart';
 import 'package:untitled/screens/str.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import '../services/auth_services.dart';
 
 class actual extends StatefulWidget {
   const actual({super.key});
@@ -14,49 +16,116 @@ class actual extends StatefulWidget {
 
 class _actualState extends State<actual> {
   bool hidepassword = true;
-  final TextEditingController usernameController = TextEditingController();
 
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController usernameController =
+  TextEditingController();
+
+  final TextEditingController passwordController =
+  TextEditingController();
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  final AuthService authService = AuthService();
+
+  bool isLoading = false;
 
   Future<void> login() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String email = usernameController.text.trim();
+    final String password = passwordController.text;
 
-    final String savedUsername = prefs.getString('username') ?? '';
+    setState(() {
+      isLoading = true;
+    });
 
-    final String savedPassword = prefs.getString('password') ?? '';
+    try {
 
-    final String enteredUsername = usernameController.text.trim();
+      await authService.login(
+        email: email,
+        password: password,
+      );
 
-    final String enteredPassword = passwordController.text;
+      if (!mounted) return;
 
-    if (enteredUsername == savedUsername && enteredPassword == savedPassword ) {
-      await prefs.setBool('isLoggedIn', true);
+      setState(() {
+        isLoading = false;
+      });
+
+      Fluttertoast.showToast(
+        msg: "Login successful",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+      );
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => str()),
+        MaterialPageRoute(
+          builder: (context) => str(),
+        ),
       );
-    } else if (enteredUsername == savedUsername &&
-        enteredPassword != savedPassword) {
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
+
+      String message;
+
+      switch (e.code) {
+        case 'user-not-found':
+          message = 'User not found. Please signup';
+          break;
+
+        case 'wrong-password':
+          message = 'Password is incorrect';
+          break;
+
+        case 'invalid-credential':
+          message = 'Email or password is incorrect';
+          break;
+
+        case 'invalid-email':
+          message = 'Please enter a valid email';
+          break;
+
+        case 'user-disabled':
+          message = 'This account has been disabled';
+          break;
+
+        case 'too-many-requests':
+          message = 'Too many attempts. Try again later';
+          break;
+
+        default:
+          message = e.message ?? 'Login failed';
+      }
+
       Fluttertoast.showToast(
-        msg: "password is incorrect",
+        msg: message,
         toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
       );
-    } else if (enteredUsername != savedUsername &&
-        enteredPassword == savedPassword) {
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
+
       Fluttertoast.showToast(
-        msg: "username or email is incorrect",
+        msg: "Something went wrong",
         toastLength: Toast.LENGTH_SHORT,
-      );
-    } else {
-      Fluttertoast.showToast(
-        msg: "user not found .please signup",
-        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
       );
     }
   }
@@ -69,54 +138,75 @@ class _actualState extends State<actual> {
     super.dispose();
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
         child: Form(
           key: _formKey,
-
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 100, left: 50, right: 200),
 
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 100,
+                  left: 50,
+                  right: 200,
+                ),
                 child: const Text(
                   "welcome back",
-
-                  style: TextStyle(fontSize: 70, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                    fontSize: 70,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
+
 
               Center(
                 child: Column(
                   children: [
+
                     const SizedBox(height: 50),
                     SizedBox(
                       width: 460,
-
                       child: TextFormField(
                         controller: usernameController,
+
+                        keyboardType: TextInputType.emailAddress,
 
                         decoration: InputDecoration(
                           hintText: "Username or email",
 
-                          hintStyle: const TextStyle(fontSize: 22),
+                          hintStyle: const TextStyle(
+                            fontSize: 22,
+                          ),
 
-                          prefixIcon: const Icon(Icons.person),
+                          prefixIcon: const Icon(
+                            Icons.person,
+                          ),
 
-                          contentPadding: const EdgeInsets.symmetric(
+                          contentPadding:
+                          const EdgeInsets.symmetric(
                             horizontal: 20,
                             vertical: 30,
                           ),
 
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius:
+                            BorderRadius.circular(10),
                           ),
                         ),
+
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter username or email';
+                          if (value == null ||
+                              value.trim().isEmpty) {
+                            return 'Please enter email';
+                          }
+
+                          if (!value.contains('@')) {
+                            return 'Please enter a valid email';
                           }
 
                           return null;
@@ -127,7 +217,6 @@ class _actualState extends State<actual> {
                     const SizedBox(height: 30),
                     SizedBox(
                       width: 460,
-
                       child: TextFormField(
                         controller: passwordController,
 
@@ -136,9 +225,13 @@ class _actualState extends State<actual> {
                         decoration: InputDecoration(
                           hintText: "Password",
 
-                          hintStyle: const TextStyle(fontSize: 22),
+                          hintStyle: const TextStyle(
+                            fontSize: 22,
+                          ),
 
-                          prefixIcon: const Icon(Icons.lock),
+                          prefixIcon: const Icon(
+                            Icons.lock,
+                          ),
 
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -149,23 +242,27 @@ class _actualState extends State<actual> {
 
                             onPressed: () {
                               setState(() {
-                                hidepassword = !hidepassword;
+                                hidepassword =
+                                !hidepassword;
                               });
                             },
                           ),
 
-                          contentPadding: const EdgeInsets.symmetric(
+                          contentPadding:
+                          const EdgeInsets.symmetric(
                             horizontal: 30,
                             vertical: 30,
                           ),
 
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius:
+                            BorderRadius.circular(10),
                           ),
                         ),
 
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
+                          if (value == null ||
+                              value.isEmpty) {
                             return 'Please enter password';
                           }
 
@@ -177,16 +274,19 @@ class _actualState extends State<actual> {
                         },
                       ),
                     ),
+
+                    // =========================
+                    // FORGOT PASSWORD
+                    // =========================
                     SizedBox(
                       height: 50,
-
                       child: GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
-
                             MaterialPageRoute(
-                              builder: (context) => const forget(),
+                              builder: (context) =>
+                              const forget(),
                             ),
                           );
                         },
@@ -202,8 +302,10 @@ class _actualState extends State<actual> {
 
                             style: TextStyle(
                               fontSize: 15,
-                              decoration: TextDecoration.underline,
-                              decorationColor: Colors.pink,
+                              decoration:
+                              TextDecoration.underline,
+                              decorationColor:
+                              Colors.pink,
                               color: Colors.pink,
                             ),
                           ),
@@ -212,8 +314,12 @@ class _actualState extends State<actual> {
                     ),
 
                     const SizedBox(height: 40),
+
+                    // =========================
+                    // LOGIN BUTTON
+                    // =========================
                     GestureDetector(
-                      onTap: login,
+                      onTap: isLoading ? null : login,
 
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -222,31 +328,55 @@ class _actualState extends State<actual> {
                         ),
 
                         decoration: BoxDecoration(
-                          color: Colors.pink,
+                          color: isLoading
+                              ? Colors.grey
+                              : Colors.pink,
 
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius:
+                          BorderRadius.circular(10),
                         ),
 
-                        child: const Text(
+                        child: isLoading
+                            ? const SizedBox(
+                          height: 36,
+                          width: 36,
+                          child:
+                          CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        )
+                            : const Text(
                           "Login",
 
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 30,
-                            fontWeight: FontWeight.bold,
+                            fontWeight:
+                            FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
+
+                    // =========================
+                    // OR CONTINUE
+                    // =========================
                     const Padding(
                       padding: EdgeInsets.only(top: 20),
 
                       child: Text(
                         "-or continue with-",
 
-                        style: TextStyle(fontSize: 20),
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
                       ),
                     ),
+
+                    // =========================
+                    // SOCIAL ICONS
+                    // =========================
                     Padding(
                       padding: const EdgeInsets.only(
                         top: 25,
@@ -255,37 +385,52 @@ class _actualState extends State<actual> {
                       ),
 
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        mainAxisAlignment:
+                        MainAxisAlignment.spaceEvenly,
 
                         children: [
-                          Image.asset('assets/Google.png'),
+                          Image.asset(
+                            'assets/Google.png',
+                          ),
 
-                          Image.asset('assets/apple.png'),
+                          Image.asset(
+                            'assets/apple.png',
+                          ),
 
-                          Image.asset('assets/Facebook.png'),
+                          Image.asset(
+                            'assets/Facebook.png',
+                          ),
                         ],
                       ),
                     ),
+
+                    // =========================
+                    // SIGNUP
+                    // =========================
                     Padding(
-                      padding: const EdgeInsets.only(top: 20),
+                      padding:
+                      const EdgeInsets.only(top: 20),
 
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment:
+                        MainAxisAlignment.center,
 
                         children: [
                           const Text(
                             'create an account',
 
-                            style: TextStyle(fontSize: 19),
+                            style: TextStyle(
+                              fontSize: 19,
+                            ),
                           ),
 
                           GestureDetector(
                             onTap: () {
                               Navigator.push(
                                 context,
-
                                 MaterialPageRoute(
-                                  builder: (context) => const sign(),
+                                  builder: (context) =>
+                                  const sign(),
                                 ),
                               );
                             },
@@ -296,10 +441,10 @@ class _actualState extends State<actual> {
                               style: TextStyle(
                                 fontSize: 19,
                                 color: Colors.pink,
-
-                                decoration: TextDecoration.underline,
-
-                                decorationColor: Colors.pink,
+                                decoration:
+                                TextDecoration.underline,
+                                decorationColor:
+                                Colors.pink,
                               ),
                             ),
                           ),
