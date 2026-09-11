@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/auth_services.dart';
 import 'actual.dart';
 
 class dash extends StatefulWidget {
@@ -12,6 +12,11 @@ class dash extends StatefulWidget {
 
 class _dashState extends State<dash> {
   int selectedIndex = 0;
+  final AuthService _authService = AuthService();
+
+  Future<void> logout() async {
+    await _authService.logout();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,36 +118,12 @@ class _dashState extends State<dash> {
                 color: Colors.red,
                 fontWeight: FontWeight.bold,
               ),
-            ),onTap: () async {
-            final prefs = await SharedPreferences.getInstance();
+            ),
+            onTap: () async {
+              await _authService.logout();
+              Navigator.pushReplacement(context,MaterialPageRoute(builder: ((context) =>const actual())));
+            },
 
-
-            await prefs.setBool('isLoggedIn', false);
-
-
-            await prefs.remove('fullName');
-            await prefs.remove('address');
-            await prefs.remove('city');
-            await prefs.remove('state');
-            await prefs.remove('country');
-
-
-            await prefs.remove('businessName');
-            await prefs.remove('businessAddress');
-            await prefs.remove('businessCity');
-            await prefs.remove('businessState');
-            await prefs.remove('businessCountry');
-
-            if (!context.mounted) return;
-
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                builder: (context) => actual(),
-              ),
-                  (route) => false,
-            );
-          },
           ),
         ],
       ),
