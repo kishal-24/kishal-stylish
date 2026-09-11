@@ -6,6 +6,8 @@ import 'package:untitled/screens/homepage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import  'package:untitled/screens/login.dart';
 import  'package:untitled/widget/bot.dart';
+import 'package:provider/provider.dart';
+import 'provider/product_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +26,14 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+   return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(
+            create: (_) => ProductProvider(),
+          ),
+        ],
+     child:
+     MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -48,7 +57,7 @@ class MyApp extends StatelessWidget {
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
       home: const homePage(),
-
+     ),
     );
 
   }
