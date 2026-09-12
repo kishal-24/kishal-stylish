@@ -12,9 +12,6 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  // ============================================================
-  // GET PRODUCT PRICE
-  // ============================================================
 
   double getProductPrice(
       Map<String, dynamic> product,
@@ -30,9 +27,7 @@ class _CartPageState extends State<CartPage> {
     return double.tryParse(priceText) ?? 0;
   }
 
-  // ============================================================
-  // GET PRODUCT QUANTITY
-  // ============================================================
+
 
   int getProductQuantity(
       Map<String, dynamic> product,
@@ -43,9 +38,7 @@ class _CartPageState extends State<CartPage> {
         1;
   }
 
-  // ============================================================
-  // TOTAL PRICE
-  // ============================================================
+
 
   double get totalPrice {
     double total = 0;
@@ -63,10 +56,7 @@ class _CartPageState extends State<CartPage> {
     return total;
   }
 
-  // ============================================================
-  // PRODUCT IMAGE
-  // Supports API URL + local asset
-  // ============================================================
+
 
   Widget productImage(
       Map<String, dynamic> item,
@@ -104,7 +94,7 @@ class _CartPageState extends State<CartPage> {
       );
     }
 
-    // LOCAL IMAGE
+
     return Image.asset(
       image,
       width: 90,
@@ -118,9 +108,6 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  // ============================================================
-  // IMAGE ERROR
-  // ============================================================
 
   Widget imageError() {
     return Container(
@@ -134,9 +121,7 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  // ============================================================
-  // INCREASE QUANTITY
-  // ============================================================
+
 
   void increaseQuantity(int index) {
     if (index < 0 ||
@@ -149,9 +134,7 @@ class _CartPageState extends State<CartPage> {
     });
   }
 
-  // ============================================================
-  // DECREASE QUANTITY
-  // ============================================================
+
 
   void decreaseQuantity(int index) {
     if (index < 0 ||
@@ -164,9 +147,7 @@ class _CartPageState extends State<CartPage> {
     });
   }
 
-  // ============================================================
-  // REMOVE ITEM
-  // ============================================================
+
 
   void removeItem(int index) {
     if (index < 0 ||
@@ -179,9 +160,6 @@ class _CartPageState extends State<CartPage> {
     });
   }
 
-  // ============================================================
-  // PROCEED TO CHECKOUT
-  // ============================================================
 
   void proceedToCheckout() {
     if (cart.cartItems.isEmpty) {
@@ -204,18 +182,14 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
 
-      // ========================================================
-      // APP BAR
-      // ========================================================
+
 
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -239,9 +213,7 @@ class _CartPageState extends State<CartPage> {
         ),
       ),
 
-      // ========================================================
-      // BODY
-      // ========================================================
+
 
       body: cart.cartItems.isEmpty
           ? const Center(
@@ -287,9 +259,7 @@ class _CartPageState extends State<CartPage> {
       )
           : Column(
         children: [
-          // ==================================================
-          // CART LIST
-          // ==================================================
+
 
           Expanded(
             child: ListView.builder(
@@ -369,7 +339,7 @@ class _CartPageState extends State<CartPage> {
                               .start,
 
                           children: [
-                            // NAME
+
                             Text(
                               item['name']
                                   ?.toString() ??
@@ -393,8 +363,6 @@ class _CartPageState extends State<CartPage> {
                             const SizedBox(
                               height: 8,
                             ),
-
-                            // PRICE
                             Text(
                               item['price']
                                   ?.toString() ??
@@ -412,12 +380,27 @@ class _CartPageState extends State<CartPage> {
                                     .bold,
                               ),
                             ),
+                            const SizedBox(height: 5),
+
+
+                            if (item['selectedSize'] != null &&
+                                item['selectedSize'].toString().isNotEmpty)
+                              Text(
+                                'Size: ${item['selectedSize']}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Colors.black87,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+
+                            const SizedBox(height: 3),
 
                             const SizedBox(
                               height: 3,
                             ),
 
-                            // DESCRIPTION
+
                             Text(
                               item['desc']
                                   ?.toString() ??
@@ -442,9 +425,7 @@ class _CartPageState extends State<CartPage> {
                               height: 10,
                             ),
 
-                            // ==================================================
-                            // QUANTITY
-                            // ==================================================
+
 
                             Row(
                               children: [
@@ -493,7 +474,7 @@ class _CartPageState extends State<CartPage> {
                                   width: 12,
                                 ),
 
-                                // QUANTITY TEXT
+
                                 Text(
                                   '${item['quantity'] ?? 1}',
 
@@ -510,7 +491,6 @@ class _CartPageState extends State<CartPage> {
                                   width: 12,
                                 ),
 
-                                // PLUS
                                 Container(
                                   width: 32,
                                   height: 32,
@@ -556,9 +536,6 @@ class _CartPageState extends State<CartPage> {
                         ),
                       ),
 
-                      // ==================================================
-                      // DELETE
-                      // ==================================================
 
                       IconButton(
                         onPressed: () {
@@ -579,9 +556,6 @@ class _CartPageState extends State<CartPage> {
             ),
           ),
 
-          // ==================================================
-          // BOTTOM TOTAL
-          // ==================================================
 
           Container(
             padding:
@@ -610,9 +584,7 @@ class _CartPageState extends State<CartPage> {
 
             child: Column(
               children: [
-                // ==================================================
-                // TOTAL
-                // ==================================================
+
 
                 Row(
                   mainAxisAlignment:

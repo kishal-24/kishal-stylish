@@ -1,26 +1,24 @@
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_service.dart';
 
 class cart {
-  // ==========================================
-  // LOCAL CART
-  // ==========================================
 
   static final List<Map<String, dynamic>> cartItems = [];
+  static const String _cartStorageKey = 'cart_items';
+
 
   static final ValueNotifier<int> cartCount =
   ValueNotifier<int>(0);
-
-  // ==========================================
-  // ADD TO CART
-  // ==========================================
-
   static void addToCart(
       Map<String, dynamic> product,
       ) {
     final int existingIndex = cartItems.indexWhere(
-          (item) => item['id'] == product['id'],
+          (item) =>
+      item['id'] == product['id'] &&
+          item['selectedSize'] == product['selectedSize'],
     );
 
     if (existingIndex != -1) {
@@ -36,10 +34,6 @@ class cart {
     updateCartCount();
   }
 
-  // ==========================================
-  // INCREASE QUANTITY
-  // ==========================================
-
   static void increaseQuantity(int index) {
     if (index < 0 || index >= cartItems.length) {
       return;
@@ -51,9 +45,7 @@ class cart {
     updateCartCount();
   }
 
-  // ==========================================
-  // DECREASE QUANTITY
-  // ==========================================
+
 
   static void decreaseQuantity(int index) {
     if (index < 0 || index >= cartItems.length) {
@@ -73,9 +65,7 @@ class cart {
     updateCartCount();
   }
 
-  // ==========================================
-  // REMOVE PRODUCT
-  // ==========================================
+
 
   static void removeFromCart(int index) {
     if (index < 0 || index >= cartItems.length) {
@@ -87,9 +77,7 @@ class cart {
     updateCartCount();
   }
 
-  // ==========================================
-  // UPDATE CART COUNT
-  // ==========================================
+
 
   static void updateCartCount() {
     int totalQuantity = 0;
@@ -105,9 +93,6 @@ class cart {
     cartCount.value = totalQuantity;
   }
 
-  // ==========================================
-  // SEND CART TO API
-  // ==========================================
 
   static Future<Map<String, dynamic>?>
   syncCartToApi() async {
@@ -129,13 +114,67 @@ class cart {
     );
   }
 
-  // ==========================================
-  // CLEAR CART
-  // ==========================================
+  static Future<void> saveCart() async {
+    try {
+      final SharedPreferences prefs =
+      await SharedPreferences.getInstance();
 
-  static void clearCart() {
+      final String cartJson = jsonEncode(cartItems);
+
+      await prefs.setString(
+        _cartStorageKey,
+        cartJson,
+      );
+    } catch (e) {
+      debugPrint('SAVE CART ERROR: $e');
+    }
+  }
+  static Future<void> loadCart() async {
+    try {
+      final SharedPreferences prefs =
+      await SharedPreferences.getInstance();
+
+      final String? cartJson =
+      prefs.getString(_cartStorageKey);
+
+      if (cartJson == null || cartJson.isEmpty) {
+        cartItems.clear();
+        updateCartCount();
+        return;
+      }
+
+      final dynamic decodedData =
+      jsonDecode(cartJson);
+
+      if (decodedData is List) {
+        cartItems.clear();
+
+        for (final item in decodedData) {
+          if (item is Map) {
+            cartItems.add(
+              Map<String, dynamic>.from(item),
+            );
+          }
+        }
+      }
+
+      updateCartCount();
+    } catch (e) {
+      debugPrint('LOAD CART ERROR: $e');
+
+      cartItems.clear();
+      updateCartCount();
+    }
+  }
+
+  static Future<void> clearCart() async {
     cartItems.clear();
 
     cartCount.value = 0;
+
+    final SharedPreferences prefs =
+    await SharedPreferences.getInstance();
+
+    await prefs.remove(_cartStorageKey);
   }
 }

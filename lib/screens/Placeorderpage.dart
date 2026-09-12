@@ -428,9 +428,7 @@ color: Colors.black,
 );
 }
 
-// ------------------------------------------------------------
-// PAYMENT ROW
-// ------------------------------------------------------------
+
 
 Widget paymentRow(
 String title,
@@ -880,9 +878,6 @@ FontWeight.w600,
 
 const SizedBox(height: 25),
 
-// ------------------------------------------------
-// ORDER PAYMENT DETAILS
-// ------------------------------------------------
 
 const Text(
 'Order Payment Details',
@@ -1032,9 +1027,6 @@ const SizedBox(height: 30),
 ),
 ),
 
-// --------------------------------------------------------
-// BOTTOM PAYMENT BAR
-// --------------------------------------------------------
 
 Container(
 width:
@@ -1139,61 +1131,47 @@ textColor: Colors.white,
 return;
 }
 
-Navigator.push(
-context,
-
-MaterialPageRoute(
-builder:
-(context) =>
-PaymentPage(
-totalAmount:
-totalPrice,
-),
-),
-);
-},
-
-style:
-ElevatedButton
-    .styleFrom(
-backgroundColor:
-const Color(
-0xffF83758,
-),
-
-foregroundColor:
-Colors.white,
-
-elevation: 0,
-
-shape:
-RoundedRectangleBorder(
-borderRadius:
-BorderRadius.circular(
-5,
-),
-),
-),
-
-child: const Text(
-'Proceed to Payment',
-
-style:
-TextStyle(
-fontSize: 17,
-fontWeight:
-FontWeight.bold,
-),
-),
-),
-),
-],
-),
-),
-],
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PaymentPage(
+                      totalAmount: totalPrice,
+                      cartItems: widget.cartItems,
+                      selectedAddress: selectedAddress,
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(
+                  0xffF83758,
+                ),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    5,
+                  ),
+                ),
+              ),
+              child: const Text(
+                'Proceed to Payment',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
 ),
 ),
 );
 }
 }
+
+
 

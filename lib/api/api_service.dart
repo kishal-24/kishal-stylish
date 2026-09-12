@@ -98,34 +98,43 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> createOrder({
-    required int userId,
-    required List<Map<String, dynamic>> products,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/carts/add'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'userId': userId,
-          'products': products,
-        }),
-      );
+static Future<Map<String, dynamic>?> createOrder({
+required int userId,
+required List<Map<String, dynamic>> products,
+required double totalAmount,
+required String selectedAddress,
+}) async {
+try {
+final response = await http.post(
+Uri.parse('$baseUrl/carts/add'),
 
-      print('ORDER API STATUS: ${response.statusCode}');
-      print('ORDER API RESPONSE: ${response.body}');
+headers: {
+'Content-Type': 'application/json',
+},
 
-      if (response.statusCode == 200 ||
-          response.statusCode == 201) {
-        return jsonDecode(response.body);
-      }
+body: jsonEncode({
+'userId': userId,
 
-      return null;
-    } catch (e) {
-      print('ORDER API ERROR: $e');
-      return null;
-    }
+'products': products,
+
+'totalAmount': totalAmount,
+
+'deliveryAddress': selectedAddress,
+}),
+);
+
+print('ORDER API STATUS: ${response.statusCode}');
+print('ORDER API RESPONSE: ${response.body}');
+
+if (response.statusCode == 200 ||
+response.statusCode == 201) {
+return jsonDecode(response.body);
+}
+
+return null;
+} catch (e) {
+print('ORDER API ERROR: $e');
+return null;
+}
   }
 }

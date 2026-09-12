@@ -21,10 +21,49 @@ class ProductDetailsPage extends StatefulWidget {
 class _ProductDetailsPageState extends State<ProductDetailsPage> {
   bool isAddedToCart = false;
   String selectedSize = '';
+  bool productHasSize() {
+    final String category =
+    (widget.product['category'] ?? '').toString().toLowerCase();
+
+    return category.contains('shoe') ||
+        category.contains('sneaker') ||
+        category.contains('footwear') ||
+        category.contains('dress') ||
+        category.contains('shirt') ||
+        category.contains('top');
+  }
 
   static const Color lightPink = Color(0xFFFFCCD5);
 
   static const Color backgroundColor = Color(0xFFFDFDFD);
+  List<Widget> buildRatingStars(double rating) {
+    return List.generate(
+      5,
+          (index) {
+        if (rating >= index + 1) {
+          return const Icon(
+            Icons.star,
+            color: Colors.amber,
+            size: 22,
+          );
+        }
+
+        if (rating >= index + 0.5) {
+          return const Icon(
+            Icons.star_half,
+            color: Colors.amber,
+            size: 22,
+          );
+        }
+
+        return const Icon(
+          Icons.star_border,
+          color: Colors.grey,
+          size: 22,
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -271,7 +310,11 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                                 return;
                               }
-                              cart.addToCart(widget.product);
+                              final cartProduct = Map<String, dynamic>.from(widget.product);
+
+                              cartProduct['selectedSize'] = selectedSize;
+
+                              cart.addToCart(cartProduct);;
                               setState(() {
                                 isAddedToCart = true;
                               });
@@ -422,11 +465,14 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                               return;
                             }
+
+                            final orderProduct = Map<String, dynamic>.from(widget.product);
+                            orderProduct['selectedSize'] = selectedSize;
+
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    PlaceOrderPage(cartItems: [widget.product]),
+                                builder: (context) => PlaceOrderPage(cartItems: [orderProduct]),
                               ),
                             );
                           },
@@ -684,17 +730,22 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                   const SizedBox(height: 3),
 
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.star, color: Colors.amber, size: 16),
+                      ...buildRatingStars(
+                        (widget.product['rating'] as num?)?.toDouble() ?? 0.0,
+                      ),
 
-                      Icon(Icons.star, color: Colors.amber, size: 16),
+                      const SizedBox(width: 8),
 
-                      Icon(Icons.star, color: Colors.amber, size: 16),
-
-                      Icon(Icons.star, color: Colors.amber, size: 16),
-
-                      Icon(Icons.star, color: Colors.grey, size: 16),
+                      Text(
+                        ((widget.product['rating'] as num?)?.toDouble() ?? 0.0)
+                            .toStringAsFixed(1),
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -745,17 +796,22 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       ),
     );
   }
-
   Widget buildSizeOptions() {
-    String productName = (widget.product['name'] ?? '').toLowerCase();
+    final String category =
+    (widget.product['category'] ?? '').toString().toLowerCase();
 
     List<String> sizes;
-    if (productName.contains('shoe')) {
+
+    if (category.contains('shoe') ||
+        category.contains('sneaker') ||
+        category.contains('footwear')) {
       sizes = ['6 UK', '7 UK', '8 UK', '9 UK', '10 UK'];
-    } else if (productName.contains('dress')) {
+    } else if (category.contains('dress') ||
+        category.contains('shirt') ||
+        category.contains('top')) {
       sizes = ['S', 'M', 'L', 'XL', 'XXL'];
-    } else if (productName.contains('watch')) {
-      sizes = ['6', '7', '8'];
+    } else if (category.contains('watch')) {
+      sizes = ['Standard'];
     } else {
       sizes = ['S', 'M', 'L', 'XL'];
     }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:untitled/screens/forget.dart';
 import 'package:untitled/screens/sign.dart';
 import 'package:untitled/screens/str.dart';
@@ -16,7 +15,7 @@ class actual extends StatefulWidget {
 
 class _actualState extends State<actual> {
   bool hidepassword = true;
-
+  final AuthService authService = AuthService();
   final TextEditingController usernameController =
   TextEditingController();
 
@@ -25,7 +24,7 @@ class _actualState extends State<actual> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final AuthService authService = AuthService();
+
 
   bool isLoading = false;
 
@@ -389,11 +388,94 @@ class _actualState extends State<actual> {
                         MainAxisAlignment.spaceEvenly,
 
                         children: [
-                          Image.asset(
-                            'assets/Google.png',
-                          ),
 
-                          Image.asset(
+                      GestureDetector(
+                      onTap: isLoading
+                          ? null
+                          : () async {
+                    print('GOOGLE BUTTON PRESSED');
+
+                    setState(() {
+                    isLoading = true;
+                    });
+
+                    try {
+                    final userCredential =
+                    await authService.signInWithGoogle();
+
+                    if (!mounted) return;
+
+                    if (userCredential != null) {
+                    print('GOOGLE LOGIN SUCCESS');
+                    print(
+                    'Name: ${userCredential.user?.displayName}',
+                    );
+                    print(
+                    'Email: ${userCredential.user?.email}',
+                    );
+
+                    setState(() {
+                    isLoading = false;
+                    });
+
+                    Fluttertoast.showToast(
+                    msg: "Google login successful",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.green,
+                    textColor: Colors.white,
+                    );
+
+                    // Go to your app
+                    Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                    builder: (context) => str(),
+                    ),
+                    );
+                    } else {
+                    setState(() {
+                    isLoading = false;
+                    });
+
+                    Fluttertoast.showToast(
+                    msg: "Google login failed",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.red,
+                    textColor: Colors.white,
+                    );
+                    }
+                    } catch (e) {
+                    if (!mounted) return;
+
+                    setState(() {
+                    isLoading = false;
+                    });
+
+                    print('GOOGLE LOGIN ERROR: $e');
+
+                    Fluttertoast.showToast(
+                    msg: "Google login failed",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.red,
+                    textColor: Colors.white,
+                    );
+                    }
+                    },
+                      child: Image.asset(
+                        'assets/Google.png',
+                        width: 50,
+                        height: 50,
+                      ),
+                    ),
+
+
+
+
+
+              Image.asset(
                             'assets/apple.png',
                           ),
 
