@@ -23,9 +23,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
 
 
-
   static const String _cartStorageKey = 'cart_items';
-
 
 
 
@@ -90,7 +88,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
 
 
-
   Future<void> _addCartItem(
       AddCartItem event,
       Emitter<CartState> emit,
@@ -112,7 +109,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       Map<String, dynamic>.from(
         event.product,
       );
-
 
 
 

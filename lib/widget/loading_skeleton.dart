@@ -65,61 +65,24 @@ class ProductLoadingSkeleton extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(
-            height: 180,
-            width: double.infinity,
             child: Bone(
               width: double.infinity,
-              height: 180,
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Bone(
-                  width: 120,
-                  height: 16,
-                ),
-
                 const SizedBox(height: 8),
-
                 const Row(
                   children: [
-                    Bone(
-                      width: 45,
-                      height: 15,
-                    ),
                     SizedBox(width: 8),
-                    Bone(
-                      width: 55,
-                      height: 15,
-                    ),
                   ],
                 ),
-
                 const SizedBox(height: 8),
-
-                const Bone(
-                  width: 80,
-                  height: 16,
-                ),
-
                 const SizedBox(height: 8),
-
-                const Bone(
-                  width: 140,
-                  height: 14,
-                ),
-
                 const SizedBox(height: 5),
-
-                const Bone(
-                  width: 100,
-                  height: 14,
-                ),
               ],
             ),
           ),

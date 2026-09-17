@@ -25,7 +25,6 @@ class CartLoading extends CartState {
 
 
 
-
 class CartLoaded extends CartState {
   final List<Map<String, dynamic>> cartItems;
   final double totalPrice;
@@ -34,18 +33,6 @@ class CartLoaded extends CartState {
     this.cartItems = const [],
     this.totalPrice = 0.0,
   });
-
-  int get count {
-    return cartItems.fold(
-      0,
-      (total, item) {
-        final quantity = int.tryParse(
-              item['quantity']?.toString() ?? '1',
-            ) ?? 1;
-        return total + quantity;
-      },
-    );
-  }
 
   CartLoaded copyWith({
     List<Map<String, dynamic>>? cartItems,
