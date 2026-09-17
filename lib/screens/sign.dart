@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:untitled/screens/actual.dart';
+import 'package:stylish/screens/actual.dart';
 
-import '../services/auth_services.dart';
+import '../data/services/auth_services.dart';
 
 class sign extends StatefulWidget {
 const sign({super.key});

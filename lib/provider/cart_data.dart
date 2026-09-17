@@ -12,9 +12,12 @@ class cart {
 
   static final ValueNotifier<int> cartCount =
   ValueNotifier<int>(0);
-  static void addToCart(
+
+  static final ValueNotifier<bool> isLoading = ValueNotifier<bool>(false);
+
+  static Future<void> addToCart(
       Map<String, dynamic> product,
-      ) {
+      ) async {
     final int existingIndex = cartItems.indexWhere(
           (item) =>
       item['id'] == product['id'] &&
@@ -34,7 +37,9 @@ class cart {
     updateCartCount();
   }
 
-  static void increaseQuantity(int index) {
+  static Future<void> increaseQuantity(int index) async {
+    isLoading.value = true;
+    await Future.delayed(const Duration(milliseconds: 300));
     if (index < 0 || index >= cartItems.length) {
       return;
     }
@@ -43,15 +48,18 @@ class cart {
         (cartItems[index]['quantity'] ?? 1) + 1;
 
     updateCartCount();
+    isLoading.value = false;
   }
 
 
 
-  static void decreaseQuantity(int index) {
+  static Future<void> decreaseQuantity(int index) async {
     if (index < 0 || index >= cartItems.length) {
       return;
     }
 
+    isLoading.value = true;
+    await Future.delayed(const Duration(milliseconds: 300)); // Simulate network sync
     final int quantity =
         cartItems[index]['quantity'] ?? 1;
 
@@ -63,6 +71,7 @@ class cart {
     }
 
     updateCartCount();
+    isLoading.value = false;
   }
 
 
@@ -96,22 +105,7 @@ class cart {
 
   static Future<Map<String, dynamic>?>
   syncCartToApi() async {
-    if (cartItems.isEmpty) {
-      return null;
-    }
-
-    final List<Map<String, dynamic>> products =
-    cartItems.map((item) {
-      return {
-        'id': item['id'],
-        'quantity': item['quantity'] ?? 1,
-      };
-    }).toList();
-
-    return await ApiService.addCart(
-      userId: 1,
-      products: products,
-    );
+    return null;
   }
 
   static Future<void> saveCart() async {

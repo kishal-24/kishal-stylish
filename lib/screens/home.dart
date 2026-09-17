@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:untitled/widget/product_detailspage.dart';
-import 'package:untitled/screens/shop.dart';
-import 'package:untitled/widget/custom_appbar.dart';
-import 'package:untitled/screens/wish.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:untitled/provider/favorite_data.dart';
+import '../bloc/favorite/favorite_bloc.dart';
+import '../bloc/favorite/favorite_event.dart';
+import '../bloc/favorite/favorite_state.dart';
 
-import '../provider/product_provider.dart';
+import '../bloc/product/product_bloc.dart';
+import '../bloc/product/product_event.dart';
+import '../bloc/product/product_state.dart';
+
+import '../widget/custom_appbar.dart';
+import '../widget/loading_skeleton.dart';
+
+import 'product_details_page.dart';
+import 'shop.dart';
+import 'wish.dart';
 import 'dash.dart';
 
 class home extends StatefulWidget {
@@ -20,283 +26,8 @@ class home extends StatefulWidget {
 }
 
 class _homeState extends State<home> {
-  String selectedsort = '';
-  String selectedfilter = '';
-
-  List<Map<String, dynamic>> filteredProducts = [];
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = Provider.of<ProductProvider>(
-        context,
-        listen: false,
-      );
-
-      provider.loadProducts();
-    });
-  }
-
-  Widget buildProductImage(
-      String image, {
-        double height = 200,
-      }) {
-    if (image.startsWith('http://') ||
-        image.startsWith('https://')) {
-      return Image.network(
-        image,
-        width: double.infinity,
-        height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (
-            context,
-            error,
-            stackTrace,
-            ) {
-          return Container(
-            width: double.infinity,
-            height: height,
-            color: Colors.grey.shade200,
-            child: const Icon(
-              Icons.image_not_supported,
-              color: Colors.grey,
-            ),
-          );
-        },
-      );
-    }
-
-    return Image.asset(
-      image,
-      width: double.infinity,
-      height: height,
-      fit: BoxFit.cover,
-      errorBuilder: (
-          context,
-          error,
-          stackTrace,
-          ) {
-        return Container(
-          width: double.infinity,
-          height: height,
-          color: Colors.grey.shade200,
-          child: const Icon(
-            Icons.image_not_supported,
-            color: Colors.grey,
-          ),
-        );
-      },
-    );
-  }
-
-  final List<Map<String, dynamic>> small = [
-    {
-      'name': 'Pilots Watch',
-      'image': 'assets/watch.png',
-      'desc':
-      'WC Schaffhausen 2021 Pilots Watch SIHH 2019 44mm',
-      'price': '₹499',
-      'oldPrice': '₹999',
-      'discount': '40%off',
-    },
-    {
-      'name': 'White Sneakers',
-      'image': 'assets/white.png',
-      'desc':
-      'Labbin White Sneakers For Men and Female',
-      'price': '₹799',
-      'oldPrice': '₹1,499',
-      'discount': '40%off',
-    },
-  ];
-
-  double getPrice(Map<String, dynamic> product) {
-    String price = product['price']?.toString() ?? '0';
-
-    price = price
-        .replaceAll('₹', '')
-        .replaceAll(',', '')
-        .trim();
-
-    return double.tryParse(price) ?? 0;
-  }
-
-  void filterProducts(
-      double min,
-      double max,
-      List<Map<String, dynamic>> allProducts,
-      ) {
-    setState(() {
-      filteredProducts = allProducts.where((product) {
-        final double price = getPrice(product);
-
-        return price >= min && price <= max;
-      }).toList();
-    });
-  }
-
-  void showAllProducts(
-      List<Map<String, dynamic>> allProducts,
-      ) {
-    setState(() {
-      filteredProducts = List<Map<String, dynamic>>.from(
-        allProducts,
-      );
-    });
-  }
-
-  void showFilterBottomSheet(
-      List<Map<String, dynamic>> allProducts,
-      ) {
-    String tempSelectedFilter = selectedfilter;
-
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Filter',
-                    style: GoogleFonts.poppins(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  ListTile(
-                    title: const Text('₹200 - ₹300'),
-                    trailing:
-                    tempSelectedFilter == '200-300'
-                        ? const Icon(
-                      Icons.check,
-                      color: Color(0xffF83758),
-                    )
-                        : null,
-                    onTap: () {
-                      setModalState(
-                            () => tempSelectedFilter = '200-300',
-                      );
-
-                      setState(
-                            () => selectedfilter = '200-300',
-                      );
-
-                      filterProducts(
-                        200,
-                        300,
-                        allProducts,
-                      );
-
-                      Navigator.pop(context);
-                    },
-                  ),
-
-                  ListTile(
-                    title: const Text('₹300 - ₹1,000'),
-                    trailing:
-                    tempSelectedFilter == '300-1000'
-                        ? const Icon(
-                      Icons.check,
-                      color: Color(0xffF83758),
-                    )
-                        : null,
-                    onTap: () {
-                      setModalState(
-                            () => tempSelectedFilter = '300-1000',
-                      );
-
-                      setState(
-                            () => selectedfilter = '300-1000',
-                      );
-
-                      filterProducts(
-                        300,
-                        1000,
-                        allProducts,
-                      );
-
-                      Navigator.pop(context);
-                    },
-                  ),
-
-                  ListTile(
-                    title: const Text('₹1,000 - ₹10,000'),
-                    trailing:
-                    tempSelectedFilter == '1000-10000'
-                        ? const Icon(
-                      Icons.check,
-                      color: Color(0xffF83758),
-                    )
-                        : null,
-                    onTap: () {
-                      setModalState(
-                            () => tempSelectedFilter = '1000-10000',
-                      );
-
-                      setState(
-                            () => selectedfilter = '1000-10000',
-                      );
-
-                      filterProducts(
-                        1000,
-                        10000,
-                        allProducts,
-                      );
-
-                      Navigator.pop(context);
-                    },
-                  ),
-
-                  ListTile(
-                    title: const Text('Clear All'),
-                    onTap: () {
-                      setModalState(
-                            () => tempSelectedFilter = '',
-                      );
-
-                      setState(
-                            () => selectedfilter = '',
-                      );
-
-                      showAllProducts(
-                        allProducts,
-                      );
-
-                      Navigator.pop(context);
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final productProvider = Provider.of<ProductProvider>(
-      context,
-    );
-
-    final List<Map<String, dynamic>> apiProducts =
-        productProvider.products;
-
-    final List<Map<String, dynamic>> displayProducts =
-    filteredProducts.isNotEmpty
-        ? filteredProducts
-        : apiProducts;
-
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -304,29 +35,26 @@ class _homeState extends State<home> {
 
         SystemNavigator.pop();
       },
+
       child: Scaffold(
         drawer: const dash(),
         appBar: const CustomAppBar(),
 
         body: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
 
             child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
 
               children: [
                 const SizedBox(height: 20),
-
-                Row(
+                const Row(
                   mainAxisAlignment:
                   MainAxisAlignment.spaceBetween,
 
                   children: [
-                    const Text(
+                    Text(
                       'All Featured',
                       style: TextStyle(
                         fontSize: 30,
@@ -337,7 +65,6 @@ class _homeState extends State<home> {
                 ),
 
                 const SizedBox(height: 40),
-
                 SizedBox(
                   height: 125,
 
@@ -375,7 +102,6 @@ class _homeState extends State<home> {
                 ),
 
                 const SizedBox(height: 20),
-
                 Container(
                   width: double.infinity,
                   height: 300,
@@ -403,6 +129,7 @@ class _homeState extends State<home> {
 
                       const Text(
                         '50% to 40% off',
+
                         style: TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.w900,
@@ -414,6 +141,7 @@ class _homeState extends State<home> {
 
                       const Text(
                         'now in products\nAll colors',
+
                         style: TextStyle(
                           fontSize: 22,
                           color: Colors.white,
@@ -426,6 +154,7 @@ class _homeState extends State<home> {
                         onTap: () {
                           Navigator.push(
                             context,
+
                             MaterialPageRoute(
                               builder: (context) =>
                               const wish(
@@ -442,11 +171,13 @@ class _homeState extends State<home> {
                             vertical: 12,
                           ),
 
-                          decoration: BoxDecoration(
+                          decoration:
+                          BoxDecoration(
                             border: Border.all(
                               color: Colors.white,
                               width: 2,
                             ),
+
                             borderRadius:
                             BorderRadius.circular(5),
                           ),
@@ -458,6 +189,7 @@ class _homeState extends State<home> {
                             children: [
                               Text(
                                 'Shop Now',
+
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight:
@@ -482,6 +214,7 @@ class _homeState extends State<home> {
 
                 const SizedBox(height: 20),
 
+
                 Row(
                   mainAxisAlignment:
                   MainAxisAlignment.center,
@@ -504,7 +237,8 @@ class _homeState extends State<home> {
                       width: 10,
                       height: 10,
 
-                      decoration: BoxDecoration(
+                      decoration:
+                      BoxDecoration(
                         borderRadius:
                         BorderRadius.circular(4),
                         color: Colors.pink,
@@ -527,6 +261,10 @@ class _homeState extends State<home> {
                 ),
 
                 const SizedBox(height: 30),
+
+                // =====================================================
+                // DEAL OF THE DAY
+                // =====================================================
 
                 Container(
                   width: double.infinity,
@@ -556,6 +294,7 @@ class _homeState extends State<home> {
                         children: [
                           const Text(
                             'Deal of the Day',
+
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 26,
@@ -578,6 +317,7 @@ class _homeState extends State<home> {
 
                               Text(
                                 '22h 52m 20s remaining',
+
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
@@ -592,6 +332,7 @@ class _homeState extends State<home> {
                         onTap: () {
                           Navigator.push(
                             context,
+
                             MaterialPageRoute(
                               builder: (context) =>
                               const wish(
@@ -609,7 +350,8 @@ class _homeState extends State<home> {
                             horizontal: 10,
                           ),
 
-                          decoration: BoxDecoration(
+                          decoration:
+                          BoxDecoration(
                             border: Border.all(
                               color: Colors.white,
                             ),
@@ -622,6 +364,7 @@ class _homeState extends State<home> {
                             children: [
                               Text(
                                 'View all',
+
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 13,
@@ -645,85 +388,105 @@ class _homeState extends State<home> {
 
                 const SizedBox(height: 10),
 
-                // API PRODUCT LIST
+                // =====================================================
+                // API PRODUCTS
+                // =====================================================
+
                 SizedBox(
                   height: 400,
 
-                  child: productProvider.isLoading
-                      ? const Center(
-                    child:
-                    CircularProgressIndicator(),
-                  )
-                      : productProvider.errorMessage
-                      .isNotEmpty
-                      ? Center(
-                    child: Column(
-                      mainAxisAlignment:
-                      MainAxisAlignment
-                          .center,
+                  child: BlocBuilder<
+                      ProductBloc,
+                      ProductState>(
+                    builder:
+                        (context, state) {
 
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: Colors.red,
-                          size: 40,
-                        ),
+                      if (state is ProductInitial ||
+                          state is ProductLoading) {
+                        return const ProductLoadingSkeleton();
+                      }
 
-                        const SizedBox(
-                          height: 10,
-                        ),
+                      if (state is ProductError) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment:
+                            MainAxisAlignment.center,
 
-                        Text(
-                          productProvider
-                              .errorMessage,
-                          textAlign:
-                          TextAlign.center,
-                        ),
+                            children: [
+                              const Icon(
+                                Icons.error_outline,
+                                color: Colors.red,
+                                size: 40,
+                              ),
 
-                        const SizedBox(
-                          height: 10,
-                        ),
+                              const SizedBox(height: 10),
 
-                        ElevatedButton(
-                          onPressed: () {
-                            productProvider
-                                .loadProducts();
-                          },
+                              Text(
+                                state.message,
+                                textAlign:
+                                TextAlign.center,
+                              ),
 
-                          child:
-                          const Text(
-                            'Retry',
+                              const SizedBox(height: 10),
+
+                              ElevatedButton(
+                                onPressed: () {
+                                  context
+                                      .read<ProductBloc>()
+                                      .add(
+                                    const FetchProducts(),
+                                  );
+                                },
+
+                                child:
+                                const Text('Retry'),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                  )
-                      : displayProducts.isEmpty
-                      ? const Center(
-                    child: Text(
-                      'No products found',
-                    ),
-                  )
-                      : ListView.builder(
-                    scrollDirection:
-                    Axis.horizontal,
+                        );
+                      }
 
-                    itemCount:
-                    displayProducts
-                        .length,
+                      if (state
+                      is! ProductLoaded) {
+                        return const SizedBox();
+                      }
 
-                    itemBuilder:
-                        (context, index) {
-                      return productCard(
-                        displayProducts[
-                        index],
-                        apiProducts,
+                      final products =
+                          state.products;
+
+                      if (products.isEmpty) {
+                        return const Center(
+                          child:
+                          Text(
+                            'No products found',
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        scrollDirection:
+                        Axis.horizontal,
+
+                        itemCount:
+                        products.length,
+
+                        itemBuilder:
+                            (context, index) {
+                          return productCard(
+                            products[index],
+                            products,
+                          );
+                        },
                       );
                     },
                   ),
                 ),
 
                 const SizedBox(height: 30),
+
+                // =====================================================
+                // SPECIAL OFFERS
+                // =====================================================
 
                 SizedBox(
                   height: 150,
@@ -736,7 +499,7 @@ class _homeState extends State<home> {
 
                       const SizedBox(width: 30),
 
-                      Expanded(
+                      const Expanded(
                         child: Column(
                           mainAxisAlignment:
                           MainAxisAlignment.center,
@@ -744,9 +507,10 @@ class _homeState extends State<home> {
                           crossAxisAlignment:
                           CrossAxisAlignment.start,
 
-                          children: const [
+                          children: [
                             Text(
                               'Special Offers',
+
                               style: TextStyle(
                                 fontSize: 25,
                                 fontWeight:
@@ -767,6 +531,10 @@ class _homeState extends State<home> {
                 ),
 
                 const SizedBox(height: 30),
+
+                // =====================================================
+                // FLAT AND HEELS
+                // =====================================================
 
                 SizedBox(
                   height: 180,
@@ -796,6 +564,7 @@ class _homeState extends State<home> {
                           children: [
                             const Text(
                               'Flat and heels',
+
                               style: TextStyle(
                                 fontSize: 25,
                                 fontWeight:
@@ -813,6 +582,7 @@ class _homeState extends State<home> {
                               onTap: () {
                                 Navigator.push(
                                   context,
+
                                   MaterialPageRoute(
                                     builder:
                                         (context) =>
@@ -832,6 +602,7 @@ class _homeState extends State<home> {
                                 decoration:
                                 BoxDecoration(
                                   color: Colors.red,
+
                                   borderRadius:
                                   BorderRadius
                                       .circular(5),
@@ -844,11 +615,13 @@ class _homeState extends State<home> {
                                   children: [
                                     Text(
                                       'Visit Now',
+
                                       style: TextStyle(
                                         color:
                                         Colors.white,
                                         fontWeight:
-                                        FontWeight.w900,
+                                        FontWeight
+                                            .w900,
                                         fontSize: 18,
                                       ),
                                     ),
@@ -873,6 +646,10 @@ class _homeState extends State<home> {
 
                 const SizedBox(height: 30),
 
+                // =====================================================
+                // TRENDING PRODUCTS
+                // =====================================================
+
                 Container(
                   width: double.infinity,
                   height: 110,
@@ -885,6 +662,7 @@ class _homeState extends State<home> {
 
                   decoration: BoxDecoration(
                     color: Colors.pink,
+
                     borderRadius:
                     BorderRadius.circular(8),
                   ),
@@ -901,6 +679,7 @@ class _homeState extends State<home> {
                         children: [
                           Text(
                             'Trending products',
+
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 26,
@@ -924,6 +703,7 @@ class _homeState extends State<home> {
 
                               Text(
                                 'End date',
+
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
@@ -942,7 +722,8 @@ class _homeState extends State<home> {
                           horizontal: 10,
                         ),
 
-                        decoration: BoxDecoration(
+                        decoration:
+                        BoxDecoration(
                           border: Border.all(
                             color: Colors.white,
                           ),
@@ -955,6 +736,7 @@ class _homeState extends State<home> {
                           children: [
                             Text(
                               'View all',
+
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 13,
@@ -977,20 +759,38 @@ class _homeState extends State<home> {
 
                 const SizedBox(height: 10),
 
+                // =====================================================
+                // SMALL PRODUCTS
+                // =====================================================
+
                 SizedBox(
                   height: 400,
 
-                  child: ListView.builder(
-                    scrollDirection:
-                    Axis.horizontal,
+                  child: BlocBuilder<
+                      ProductBloc,
+                      ProductState>(
+                    builder:
+                        (context, state) {
 
-                    itemCount: small.length,
+                      final products =
+                      state is ProductLoaded
+                          ? state.products
+                          : <Map<String, dynamic>>[];
 
-                    itemBuilder:
-                        (context, index) {
-                      return smallcard(
-                        small[index],
-                        apiProducts,
+                      return ListView.builder(
+                        scrollDirection:
+                        Axis.horizontal,
+
+                        itemCount:
+                        small.length,
+
+                        itemBuilder:
+                            (context, index) {
+                          return smallcard(
+                            small[index],
+                            products,
+                          );
+                        },
                       );
                     },
                   ),
@@ -998,8 +798,13 @@ class _homeState extends State<home> {
 
                 const SizedBox(height: 10),
 
+                // =====================================================
+                // NEW ARRIVALS
+                // =====================================================
+
                 Container(
-                  padding: const EdgeInsets.all(5),
+                  padding:
+                  const EdgeInsets.all(5),
 
                   width: double.infinity,
                   height: 400,
@@ -1008,7 +813,9 @@ class _homeState extends State<home> {
                     children: [
                       Image.asset(
                         'assets/hot.png',
+
                         height: 300,
+
                         fit: BoxFit.cover,
                       ),
 
@@ -1022,12 +829,12 @@ class _homeState extends State<home> {
                         children: [
                           const Column(
                             crossAxisAlignment:
-                            CrossAxisAlignment
-                                .start,
+                            CrossAxisAlignment.start,
 
                             children: [
                               Text(
                                 'New Arrivals',
+
                                 style: TextStyle(
                                   fontSize: 30,
                                   fontWeight:
@@ -1037,6 +844,7 @@ class _homeState extends State<home> {
 
                               Text(
                                 'summer 25 Collections',
+
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight:
@@ -1047,7 +855,17 @@ class _homeState extends State<home> {
                           ),
 
                           GestureDetector(
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                                context,
+
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) =>
+                                  const wish(),
+                                ),
+                              );
+                            },
 
                             child: Container(
                               padding:
@@ -1060,6 +878,7 @@ class _homeState extends State<home> {
                               decoration:
                               BoxDecoration(
                                 color: Colors.pink,
+
                                 borderRadius:
                                 BorderRadius
                                     .circular(5),
@@ -1069,6 +888,7 @@ class _homeState extends State<home> {
                                 children: [
                                   Text(
                                     'View all',
+
                                     style: TextStyle(
                                       color:
                                       Colors.white,
@@ -1096,8 +916,13 @@ class _homeState extends State<home> {
 
                 const SizedBox(height: 10),
 
+                // =====================================================
+                // SPONSORED
+                // =====================================================
+
                 const Text(
                   'Sponsored',
+
                   style: TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.w900,
@@ -1120,6 +945,7 @@ class _homeState extends State<home> {
 
                 const Text(
                   'Up to 50% off',
+
                   style: TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.w900,
@@ -1134,6 +960,10 @@ class _homeState extends State<home> {
       ),
     );
   }
+
+  // ===============================================================
+  // CATEGORY ITEM
+  // ===============================================================
 
   Widget categoryItem({
     required String image,
@@ -1172,22 +1002,23 @@ class _homeState extends State<home> {
     );
   }
 
+  // ===============================================================
+  // API PRODUCT CARD
+  // ===============================================================
+
   Widget productCard(
       Map<String, dynamic> product,
       List<Map<String, dynamic>> allProducts,
       ) {
-    return ValueListenableBuilder<
-        List<Map<String, dynamic>>>(
-      valueListenable:
-      FavoriteData.favorites,
+    return BlocBuilder<FavoriteBloc, FavoriteState>(
+      builder: (context, state) {
+        bool isFavorite = false;
 
-      builder: (
-          context,
-          favorites,
-          child,
-          ) {
-        final bool isFavorite =
-        FavoriteData.isFavorite(product);
+        if (state is FavoriteLoaded) {
+          isFavorite = state.favorites.any(
+                (item) => item['id'] == product['id'],
+          );
+        }
 
         return GestureDetector(
           onTap: () {
@@ -1233,6 +1064,10 @@ class _homeState extends State<home> {
               CrossAxisAlignment.start,
 
               children: [
+                // =================================================
+                // IMAGE + FAVORITE
+                // =================================================
+
                 Stack(
                   children: [
                     ClipRRect(
@@ -1245,18 +1080,24 @@ class _homeState extends State<home> {
                         product['image']
                             ?.toString() ??
                             '',
+
+                        height: 200,
                       ),
                     ),
 
+                    // FAVORITE BUTTON
                     Positioned(
                       top: 10,
                       right: 10,
 
                       child: GestureDetector(
                         onTap: () {
-                          FavoriteData
-                              .toggleFavorite(
-                            product,
+                          context
+                              .read<FavoriteBloc>()
+                              .add(
+                            ToggleFavorite(
+                              product,
+                            ),
                           );
                         },
 
@@ -1271,11 +1112,11 @@ class _homeState extends State<home> {
 
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black
+                                color:
+                                Colors.black
                                     .withValues(
                                   alpha: 0.15,
                                 ),
-
                                 blurRadius: 5,
                               ),
                             ],
@@ -1288,7 +1129,9 @@ class _homeState extends State<home> {
                                 .favorite_border,
 
                             color: isFavorite
-                                ? Colors.pink
+                                ? const Color(
+                              0xFFF83758,
+                            )
                                 : Colors.black,
 
                             size: 25,
@@ -1298,6 +1141,10 @@ class _homeState extends State<home> {
                     ),
                   ],
                 ),
+
+                // =================================================
+                // PRODUCT DETAILS
+                // =================================================
 
                 Padding(
                   padding:
@@ -1318,11 +1165,11 @@ class _homeState extends State<home> {
                         overflow:
                         TextOverflow.ellipsis,
 
-                        style:
-                        const TextStyle(
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 18,
                           fontWeight:
                           FontWeight.bold,
-                          fontSize: 16,
                         ),
                       ),
 
@@ -1338,99 +1185,15 @@ class _homeState extends State<home> {
                         overflow:
                         TextOverflow.ellipsis,
 
-                        style:
-                        const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 13,
                         ),
                       ),
 
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 8),
 
-                      Row(
-                        children: [
-                          Text(
-                            product['price']
-                                ?.toString() ??
-                                '',
-
-                            style:
-                            const TextStyle(
-                              fontWeight:
-                              FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-
-                          const SizedBox(width: 8),
-
-                          Text(
-                            product['oldPrice']
-                                ?.toString() ??
-                                '',
-
-                            style:
-                            const TextStyle(
-                              decoration:
-                              TextDecoration
-                                  .lineThrough,
-
-                              color: Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-
-                          const SizedBox(width: 8),
-
-                          Text(
-                            product['discount']
-                                ?.toString() ??
-                                '',
-
-                            style:
-                            const TextStyle(
-                              color: Colors.pink,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 5),
-
-                      const Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                            size: 18,
-                          ),
-
-                          Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                            size: 18,
-                          ),
-
-                          Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                            size: 18,
-                          ),
-
-                          Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                            size: 18,
-                          ),
-
-                          Icon(
-                            Icons.star,
-                            color: Colors.grey,
-                            size: 18,
-                          ),
-                        ],
-                      ),
+                      priceRow(product),
                     ],
                   ),
                 ),
@@ -1442,22 +1205,23 @@ class _homeState extends State<home> {
     );
   }
 
+  // ===============================================================
+  // SMALL PRODUCT CARD
+  // ===============================================================
+
   Widget smallcard(
       Map<String, dynamic> product,
       List<Map<String, dynamic>> allProducts,
       ) {
-    return ValueListenableBuilder<
-        List<Map<String, dynamic>>>(
-      valueListenable:
-      FavoriteData.favorites,
+    return BlocBuilder<FavoriteBloc, FavoriteState>(
+      builder: (context, state) {
+        bool isFavorite = false;
 
-      builder: (
-          context,
-          favorites,
-          child,
-          ) {
-        final bool isFavorite =
-        FavoriteData.isFavorite(product);
+        if (state is FavoriteLoaded) {
+          isFavorite = state.favorites.any(
+                (item) => item['id'] == product['id'],
+          );
+        }
 
         return GestureDetector(
           onTap: () {
@@ -1503,6 +1267,10 @@ class _homeState extends State<home> {
               CrossAxisAlignment.start,
 
               children: [
+                // =================================================
+                // IMAGE + FAVORITE
+                // =================================================
+
                 Stack(
                   children: [
                     ClipRRect(
@@ -1511,27 +1279,28 @@ class _homeState extends State<home> {
                         top: Radius.circular(10),
                       ),
 
-                      child: Image.asset(
+                      child: buildProductImage(
                         product['image']
                             ?.toString() ??
                             '',
 
-                        width: double.infinity,
                         height: 200,
-
-                        fit: BoxFit.cover,
                       ),
                     ),
 
+                    // FAVORITE
                     Positioned(
                       top: 10,
                       right: 10,
 
                       child: GestureDetector(
                         onTap: () {
-                          FavoriteData
-                              .toggleFavorite(
-                            product,
+                          context
+                              .read<FavoriteBloc>()
+                              .add(
+                            ToggleFavorite(
+                              product,
+                            ),
                           );
                         },
 
@@ -1546,11 +1315,11 @@ class _homeState extends State<home> {
 
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black
+                                color:
+                                Colors.black
                                     .withValues(
                                   alpha: 0.15,
                                 ),
-
                                 blurRadius: 5,
                               ),
                             ],
@@ -1563,7 +1332,9 @@ class _homeState extends State<home> {
                                 .favorite_border,
 
                             color: isFavorite
-                                ? Colors.pink
+                                ? const Color(
+                              0xFFF83758,
+                            )
                                 : Colors.black,
 
                             size: 25,
@@ -1574,7 +1345,9 @@ class _homeState extends State<home> {
                   ],
                 ),
 
-                const SizedBox(height: 5),
+                // =================================================
+                // DETAILS
+                // =================================================
 
                 Padding(
                   padding:
@@ -1590,8 +1363,12 @@ class _homeState extends State<home> {
                             ?.toString() ??
                             '',
 
-                        style:
-                        const TextStyle(
+                        maxLines: 1,
+
+                        overflow:
+                        TextOverflow.ellipsis,
+
+                        style: const TextStyle(
                           color: Colors.black,
                           fontSize: 18,
                           fontWeight:
@@ -1611,8 +1388,7 @@ class _homeState extends State<home> {
                         overflow:
                         TextOverflow.ellipsis,
 
-                        style:
-                        const TextStyle(
+                        style: const TextStyle(
                           color: Colors.black,
                           fontSize: 13,
                         ),
@@ -1620,55 +1396,7 @@ class _homeState extends State<home> {
 
                       const SizedBox(height: 8),
 
-                      Row(
-                        children: [
-                          Text(
-                            product['price']
-                                ?.toString() ??
-                                '',
-
-                            style:
-                            const TextStyle(
-                              color: Colors.black,
-                              fontWeight:
-                              FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-
-                          const SizedBox(width: 8),
-
-                          Text(
-                            product['oldPrice']
-                                ?.toString() ??
-                                '',
-
-                            style:
-                            const TextStyle(
-                              decoration:
-                              TextDecoration
-                                  .lineThrough,
-
-                              color: Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-
-                          const SizedBox(width: 8),
-
-                          Text(
-                            product['discount']
-                                ?.toString() ??
-                                '',
-
-                            style:
-                            const TextStyle(
-                              color: Colors.pink,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
+                      priceRow(product),
                     ],
                   ),
                 ),
@@ -1679,4 +1407,144 @@ class _homeState extends State<home> {
       },
     );
   }
+
+  // ===============================================================
+  // PRICE ROW
+  // ===============================================================
+
+  Widget priceRow(
+      Map<String, dynamic> product,
+      ) {
+    return Row(
+      children: [
+        Text(
+          product['price']?.toString() ?? '',
+
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        Text(
+          product['oldPrice']?.toString() ?? '',
+
+          style: const TextStyle(
+            decoration:
+            TextDecoration.lineThrough,
+
+            color: Colors.grey,
+            fontSize: 12,
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        Flexible(
+          child: Text(
+            product['discount']?.toString() ?? '',
+
+            overflow:
+            TextOverflow.ellipsis,
+
+            style: const TextStyle(
+              color: Colors.pink,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ===============================================================
+  // PRODUCT IMAGE
+  // ===============================================================
+
+  Widget buildProductImage(
+      String image, {
+        double height = 200,
+      }) {
+    if (image.startsWith('http://') ||
+        image.startsWith('https://')) {
+      return Image.network(
+        image,
+
+        width: double.infinity,
+        height: height,
+
+        fit: BoxFit.cover,
+
+        errorBuilder:
+            (context, error, stackTrace) {
+          return Container(
+            width: double.infinity,
+            height: height,
+
+            color: Colors.grey.shade200,
+
+            child: const Icon(
+              Icons.image_not_supported,
+              color: Colors.grey,
+            ),
+          );
+        },
+      );
+    }
+
+    return Image.asset(
+      image,
+
+      width: double.infinity,
+      height: height,
+
+      fit: BoxFit.cover,
+
+      errorBuilder:
+          (context, error, stackTrace) {
+        return Container(
+          width: double.infinity,
+          height: height,
+
+          color: Colors.grey.shade200,
+
+          child: const Icon(
+            Icons.image_not_supported,
+            color: Colors.grey,
+          ),
+        );
+      },
+    );
+  }
+
+  // ===============================================================
+  // STATIC SMALL PRODUCTS
+  // ===============================================================
+
+  final List<Map<String, dynamic>> small = [
+    {
+      'id': 1001,
+      'name': 'Pilots Watch',
+      'image': 'assets/watch.png',
+      'desc':
+      'WC Schaffhausen 2021 Pilots Watch SIHH 2019 44mm',
+      'price': '₹499',
+      'oldPrice': '₹999',
+      'discount': '40%off',
+    },
+
+    {
+      'id': 1002,
+      'name': 'White Sneakers',
+      'image': 'assets/white.png',
+      'desc':
+      'Labbin White Sneakers For Men and Female',
+      'price': '₹799',
+      'oldPrice': '₹1,499',
+      'discount': '40%off',
+    },
+  ];
 }

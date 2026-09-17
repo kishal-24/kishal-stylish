@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:untitled/screens/Placeorderpage.dart';
-import 'package:untitled/provider/cart_data.dart';
-import 'package:untitled/screens/cart_page.dart';
+import 'package:stylish/screens/Placeorderpage.dart';
+import 'package:stylish/provider/cart_data.dart';
+import 'package:stylish/screens/cart_page.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class ProductDetailsPage extends StatefulWidget {
@@ -314,7 +314,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                               cartProduct['selectedSize'] = selectedSize;
 
-                              cart.addToCart(cartProduct);;
+                              cart.addToCart(cartProduct);
                               setState(() {
                                 isAddedToCart = true;
                               });

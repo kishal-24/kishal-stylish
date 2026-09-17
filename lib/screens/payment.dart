@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
-import 'package:untitled/widget/bot.dart';
-import 'package:untitled/api/api_service.dart';
-import 'package:untitled/provider/cart_data.dart';
+import 'package:stylish/data/api/api_service.dart';
+
+
+import '../provider/cart_data.dart';
+import '../widget/bot.dart';
 
 class PaymentPage extends StatefulWidget {
   final double totalAmount;
@@ -127,7 +129,15 @@ class _PaymentPageState extends State<PaymentPage> {
                     width: 110,
                     height: 110,
                     repeat: false,
+                    onLoaded: (composition) {
+                      Future.delayed(const Duration(seconds: 3), () {
+                        if (Navigator.of(dialogContext).canPop()) {
+                          Navigator.of(dialogContext).pop();
+                        }
+                      });
+                    },
                   ),
+
 
                   const SizedBox(height: 10),
 
@@ -159,9 +169,7 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-  // ============================================================
-  // ERROR MESSAGE
-  // ============================================================
+
 
   void showErrorToast(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -171,9 +179,7 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
+
 
   @override
   Widget build(BuildContext context) {
@@ -183,9 +189,7 @@ class _PaymentPageState extends State<PaymentPage> {
     return Scaffold(
       backgroundColor: const Color(0xffFDFDFD),
 
-      // ========================================================
-      // APP BAR
-      // ========================================================
+
 
       appBar: AppBar(
         backgroundColor:
@@ -220,9 +224,6 @@ class _PaymentPageState extends State<PaymentPage> {
         ),
       ),
 
-      // ========================================================
-      // BODY
-      // ========================================================
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(15),
@@ -234,9 +235,6 @@ class _PaymentPageState extends State<PaymentPage> {
           children: [
             const SizedBox(height: 20),
 
-            // ==================================================
-            // ORDER SUMMARY
-            // ==================================================
 
             const Text(
               'Order Summary',
@@ -330,10 +328,6 @@ class _PaymentPageState extends State<PaymentPage> {
 
             const SizedBox(height: 30),
 
-            // ==================================================
-            // PAYMENT METHOD
-            // ==================================================
-
             const Text(
               'Payment Method',
 
@@ -345,30 +339,27 @@ class _PaymentPageState extends State<PaymentPage> {
 
             const SizedBox(height: 15),
 
-            // VISA
             paymentMethod(
               image: 'assets/visa.png',
             ),
 
             const SizedBox(height: 15),
 
-            // PAYPAL
+
             paymentMethod(
               image: 'assets/paypal.png',
             ),
 
             const SizedBox(height: 15),
 
-            // MASTERCARD
+
             paymentMethod(
               image: 'assets/maes.png',
             ),
 
             const SizedBox(height: 30),
 
-            // ==================================================
-            // CONTINUE BUTTON
-            // ==================================================
+
 
             Center(
               child: SizedBox(
@@ -398,8 +389,7 @@ class _PaymentPageState extends State<PaymentPage> {
                       isLoading = true;
                     });
 
-                    // PAYMENT SUCCESS
-                    // Then create order.
+
                     await placeOrder();
                   },
 
@@ -434,11 +424,6 @@ class _PaymentPageState extends State<PaymentPage> {
       ),
     );
   }
-
-  // ============================================================
-  // PAYMENT METHOD WIDGET
-  // ============================================================
-
   Widget paymentMethod({
     required String image,
   }) {

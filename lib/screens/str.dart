@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:untitled/widget/bot.dart';
+
+
+import '../widget/bot.dart';
 class str extends StatefulWidget {
   const str({super.key});
   @override

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:untitled/widget/bot.dart';
 
+import '../widget/bot.dart';
 import 'login.dart';
 class homePage extends StatefulWidget {
   const homePage({super.key});

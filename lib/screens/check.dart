@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lottie/lottie.dart';
-import 'package:untitled/widget/bot.dart';
+
 import 'package:fluttertoast/fluttertoast.dart';
+
+import '../widget/bot.dart';
 
 class Check extends StatefulWidget {
   final bool isBusinessAddress;

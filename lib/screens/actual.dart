@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:untitled/screens/forget.dart';
-import 'package:untitled/screens/sign.dart';
-import 'package:untitled/screens/str.dart';
-import '../services/auth_services.dart';
+import 'package:stylish/bloc/auth/auth_bloc.dart';
+import 'package:stylish/bloc/auth/auth_event.dart';
+import 'package:stylish/bloc/auth/auth_state.dart';
+import 'package:stylish/screens/forget.dart';
+import 'package:stylish/screens/sign.dart';
+import 'package:stylish/screens/str.dart';
 
 class actual extends StatefulWidget {
   const actual({super.key});
@@ -15,118 +17,22 @@ class actual extends StatefulWidget {
 
 class _actualState extends State<actual> {
   bool hidepassword = true;
-  final AuthService authService = AuthService();
-  final TextEditingController usernameController =
-  TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
 
-  final TextEditingController passwordController =
-  TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-
-
-  bool isLoading = false;
-
-  Future<void> login() async {
+  void login() {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    final String email = usernameController.text.trim();
-    final String password = passwordController.text;
-
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-
-      await authService.login(
-        email: email,
-        password: password,
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        isLoading = false;
-      });
-
-      Fluttertoast.showToast(
-        msg: "Login successful",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        backgroundColor: Colors.green,
-        textColor: Colors.white,
-      );
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => str(),
-        ),
-      );
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        isLoading = false;
-      });
-
-      String message;
-
-      switch (e.code) {
-        case 'user-not-found':
-          message = 'User not found. Please signup';
-          break;
-
-        case 'wrong-password':
-          message = 'Password is incorrect';
-          break;
-
-        case 'invalid-credential':
-          message = 'Email or password is incorrect';
-          break;
-
-        case 'invalid-email':
-          message = 'Please enter a valid email';
-          break;
-
-        case 'user-disabled':
-          message = 'This account has been disabled';
-          break;
-
-        case 'too-many-requests':
-          message = 'Too many attempts. Try again later';
-          break;
-
-        default:
-          message = e.message ?? 'Login failed';
-      }
-
-      Fluttertoast.showToast(
-        msg: message,
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        isLoading = false;
-      });
-
-      Fluttertoast.showToast(
-        msg: "Something went wrong",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-      );
-    }
+    context.read<AuthBloc>().add(
+      LoginRequested(
+        email: usernameController.text.trim(),
+        password: passwordController.text,
+      ),
+    );
   }
 
   @override
@@ -137,411 +43,308 @@ class _actualState extends State<actual> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-
-              Padding(
-                padding: const EdgeInsets.only(
-                  top: 100,
-                  left: 50,
-                  right: 200,
-                ),
-                child: const Text(
-                  "welcome back",
-                  style: TextStyle(
-                    fontSize: 70,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-
-
-              Center(
-                child: Column(
-                  children: [
-
-                    const SizedBox(height: 50),
-                    SizedBox(
-                      width: 460,
-                      child: TextFormField(
-                        controller: usernameController,
-
-                        keyboardType: TextInputType.emailAddress,
-
-                        decoration: InputDecoration(
-                          hintText: "Username or email",
-
-                          hintStyle: const TextStyle(
-                            fontSize: 22,
-                          ),
-
-                          prefixIcon: const Icon(
-                            Icons.person,
-                          ),
-
-                          contentPadding:
-                          const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 30,
-                          ),
-
-                          border: OutlineInputBorder(
-                            borderRadius:
-                            BorderRadius.circular(10),
-                          ),
-                        ),
-
-                        validator: (value) {
-                          if (value == null ||
-                              value.trim().isEmpty) {
-                            return 'Please enter email';
-                          }
-
-                          if (!value.contains('@')) {
-                            return 'Please enter a valid email';
-                          }
-
-                          return null;
-                        },
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthSuccess) {
+          Fluttertoast.showToast(
+            msg: 'Login successful',
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => str()),
+          );
+        } else if (state is AuthFailure) {
+          Fluttertoast.showToast(
+            msg: state.message,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+          );
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+        return Scaffold(
+          body: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      top: 100,
+                      left: 50,
+                      right: 200,
+                    ),
+                    child: const Text(
+                      "welcome back",
+                      style: TextStyle(
+                        fontSize: 70,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
+                  ),
 
-                    const SizedBox(height: 30),
-                    SizedBox(
-                      width: 460,
-                      child: TextFormField(
-                        controller: passwordController,
+                  Center(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 50),
+                        SizedBox(
+                          width: 460,
+                          child: TextFormField(
+                            controller: usernameController,
 
-                        obscureText: hidepassword,
+                            keyboardType: TextInputType.emailAddress,
 
-                        decoration: InputDecoration(
-                          hintText: "Password",
+                            decoration: InputDecoration(
+                              hintText: "Username or email",
 
-                          hintStyle: const TextStyle(
-                            fontSize: 22,
-                          ),
+                              hintStyle: const TextStyle(fontSize: 22),
 
-                          prefixIcon: const Icon(
-                            Icons.lock,
-                          ),
+                              prefixIcon: const Icon(Icons.person),
 
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              hidepassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 30,
+                              ),
+
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
 
-                            onPressed: () {
-                              setState(() {
-                                hidepassword =
-                                !hidepassword;
-                              });
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter email';
+                              }
+
+                              if (!value.contains('@')) {
+                                return 'Please enter a valid email';
+                              }
+
+                              return null;
                             },
                           ),
-
-                          contentPadding:
-                          const EdgeInsets.symmetric(
-                            horizontal: 30,
-                            vertical: 30,
-                          ),
-
-                          border: OutlineInputBorder(
-                            borderRadius:
-                            BorderRadius.circular(10),
-                          ),
                         ),
 
-                        validator: (value) {
-                          if (value == null ||
-                              value.isEmpty) {
-                            return 'Please enter password';
-                          }
+                        const SizedBox(height: 30),
+                        SizedBox(
+                          width: 460,
+                          child: TextFormField(
+                            controller: passwordController,
 
-                          if (value.length < 6) {
-                            return 'Password must be at least 6 characters';
-                          }
+                            obscureText: hidepassword,
 
-                          return null;
-                        },
-                      ),
-                    ),
+                            decoration: InputDecoration(
+                              hintText: "Password",
 
-                    // =========================
-                    // FORGOT PASSWORD
-                    // =========================
-                    SizedBox(
-                      height: 50,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                              const forget(),
+                              hintStyle: const TextStyle(fontSize: 22),
+
+                              prefixIcon: const Icon(Icons.lock),
+
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  hidepassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+
+                                onPressed: () {
+                                  setState(() {
+                                    hidepassword = !hidepassword;
+                                  });
+                                },
+                              ),
+
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 30,
+                              ),
+
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
-                          );
-                        },
 
-                        child: const Padding(
-                          padding: EdgeInsetsDirectional.only(
-                            start: 300,
-                            top: 10,
-                          ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter password';
+                              }
 
-                          child: Text(
-                            "forget password",
+                              if (value.length < 6) {
+                                return 'Password must be at least 6 characters';
+                              }
 
-                            style: TextStyle(
-                              fontSize: 15,
-                              decoration:
-                              TextDecoration.underline,
-                              decorationColor:
-                              Colors.pink,
-                              color: Colors.pink,
-                            ),
+                              return null;
+                            },
                           ),
                         ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // =========================
-                    // LOGIN BUTTON
-                    // =========================
-                    GestureDetector(
-                      onTap: isLoading ? null : login,
-
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 200,
-                          vertical: 25,
-                        ),
-
-                        decoration: BoxDecoration(
-                          color: isLoading
-                              ? Colors.grey
-                              : Colors.pink,
-
-                          borderRadius:
-                          BorderRadius.circular(10),
-                        ),
-
-                        child: isLoading
-                            ? const SizedBox(
-                          height: 36,
-                          width: 36,
-                          child:
-                          CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 3,
-                          ),
-                        )
-                            : const Text(
-                          "Login",
-
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 30,
-                            fontWeight:
-                            FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // =========================
-                    // OR CONTINUE
-                    // =========================
-                    const Padding(
-                      padding: EdgeInsets.only(top: 20),
-
-                      child: Text(
-                        "-or continue with-",
-
-                        style: TextStyle(
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-
-                    // =========================
-                    // SOCIAL ICONS
-                    // =========================
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        top: 25,
-                        left: 150,
-                        right: 150,
-                      ),
-
-                      child: Row(
-                        mainAxisAlignment:
-                        MainAxisAlignment.spaceEvenly,
-
-                        children: [
-
-                      GestureDetector(
-                      onTap: isLoading
-                          ? null
-                          : () async {
-                    print('GOOGLE BUTTON PRESSED');
-
-                    setState(() {
-                    isLoading = true;
-                    });
-
-                    try {
-                    final userCredential =
-                    await authService.signInWithGoogle();
-
-                    if (!mounted) return;
-
-                    if (userCredential != null) {
-                    print('GOOGLE LOGIN SUCCESS');
-                    print(
-                    'Name: ${userCredential.user?.displayName}',
-                    );
-                    print(
-                    'Email: ${userCredential.user?.email}',
-                    );
-
-                    setState(() {
-                    isLoading = false;
-                    });
-
-                    Fluttertoast.showToast(
-                    msg: "Google login successful",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    backgroundColor: Colors.green,
-                    textColor: Colors.white,
-                    );
-
-                    // Go to your app
-                    Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                    builder: (context) => str(),
-                    ),
-                    );
-                    } else {
-                    setState(() {
-                    isLoading = false;
-                    });
-
-                    Fluttertoast.showToast(
-                    msg: "Google login failed",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                    );
-                    }
-                    } catch (e) {
-                    if (!mounted) return;
-
-                    setState(() {
-                    isLoading = false;
-                    });
-
-                    print('GOOGLE LOGIN ERROR: $e');
-
-                    Fluttertoast.showToast(
-                    msg: "Google login failed",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                    );
-                    }
-                    },
-                      child: Image.asset(
-                        'assets/Google.png',
-                        width: 50,
-                        height: 50,
-                      ),
-                    ),
 
 
-
-
-
-              Image.asset(
-                            'assets/apple.png',
-                          ),
-
-                          Image.asset(
-                            'assets/Facebook.png',
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // =========================
-                    // SIGNUP
-                    // =========================
-                    Padding(
-                      padding:
-                      const EdgeInsets.only(top: 20),
-
-                      child: Row(
-                        mainAxisAlignment:
-                        MainAxisAlignment.center,
-
-                        children: [
-                          const Text(
-                            'create an account',
-
-                            style: TextStyle(
-                              fontSize: 19,
-                            ),
-                          ),
-
-                          GestureDetector(
+                        SizedBox(
+                          height: 50,
+                          child: GestureDetector(
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                  const sign(),
+                                  builder: (context) => const forget(),
                                 ),
                               );
                             },
 
-                            child: const Text(
-                              ' signup',
+                            child: const Padding(
+                              padding: EdgeInsetsDirectional.only(
+                                start: 300,
+                                top: 10,
+                              ),
 
-                              style: TextStyle(
-                                fontSize: 19,
-                                color: Colors.pink,
-                                decoration:
-                                TextDecoration.underline,
-                                decorationColor:
-                                Colors.pink,
+                              child: Text(
+                                "forget password",
+
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Colors.pink,
+                                  color: Colors.pink,
+                                ),
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
 
-                    const SizedBox(height: 30),
-                  ],
-                ),
+                        const SizedBox(height: 40),
+
+                        GestureDetector(
+                          onTap: isLoading ? null : login,
+
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 200,
+                              vertical: 25,
+                            ),
+
+                            decoration: BoxDecoration(
+                              color: isLoading ? Colors.grey : Colors.pink,
+
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+
+                            child: isLoading
+                                ? const SizedBox(
+                                    height: 36,
+                                    width: 36,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 3,
+                                    ),
+                                  )
+                                : const Text(
+                                    "Login",
+
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        ),
+
+
+                        const Padding(
+                          padding: EdgeInsets.only(top: 20),
+
+                          child: Text(
+                            "-or continue with-",
+
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            top: 25,
+                            left: 150,
+                            right: 150,
+                          ),
+
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+
+                            children: [
+                              GestureDetector(
+                                onTap: isLoading
+                                    ? null
+                                    : () => context.read<AuthBloc>().add(
+                                        const GoogleLoginRequested(),
+                                      ),
+                                child: Image.asset(
+                                  'assets/Google.png',
+                                  width: 50,
+                                  height: 50,
+                                ),
+                              ),
+
+                              Image.asset('assets/apple.png'),
+
+                              Image.asset('assets/Facebook.png'),
+                            ],
+                          ),
+                        ),
+
+
+                        Padding(
+                          padding: const EdgeInsets.only(top: 20),
+
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+
+                            children: [
+                              const Text(
+                                'create an account',
+
+                                style: TextStyle(fontSize: 19),
+                              ),
+
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const sign(),
+                                    ),
+                                  );
+                                },
+
+                                child: const Text(
+                                  ' signup',
+
+                                  style: TextStyle(
+                                    fontSize: 19,
+                                    color: Colors.pink,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: Colors.pink,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 30),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

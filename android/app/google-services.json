@@ -12,7 +12,20 @@
           "package_name": "com.kishal.stylish"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "194467807514-sol36nl247jtmquo8iqsd5g3vm6pmc60.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kishal.stylish",
+            "certificate_hash": "ab61761c56b96a83e40c33fc50d9a1a755a719c0"
+          }
+        },
+        {
+          "client_id": "194467807514-d3imlvr67nb2gfke0ssql1bji06j0q07.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAK3dbkLCqM-EgUlgg5W2374j2RmRLWVAM"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "194467807514-d3imlvr67nb2gfke0ssql1bji06j0q07.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

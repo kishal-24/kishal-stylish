@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:untitled/screens/cart_page.dart';
-import 'package:untitled/screens/check.dart';
-import 'package:untitled/screens/favourite_page.dart';
-import 'package:untitled/screens/home.dart';
+import 'package:stylish/screens/cart_page.dart';
+import 'package:stylish/screens/check.dart';
+import 'package:stylish/screens/favourite_page.dart';
+import 'package:stylish/screens/home.dart';
 
 class bot extends StatefulWidget {
   const bot({super.key});
@@ -16,7 +16,7 @@ class _BotState extends State<bot> {
 
   final List<Widget> pages = [
     const home(),
-    const FavouritePage(),
+    const FavoritePage(),
     const CartPage(),
     const home(),
     const Check(),

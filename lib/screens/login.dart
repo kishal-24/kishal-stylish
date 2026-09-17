@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled/screens/actual.dart';
+import 'package:stylish/screens/actual.dart';
 
 class login extends StatefulWidget {
   const login({super.key});

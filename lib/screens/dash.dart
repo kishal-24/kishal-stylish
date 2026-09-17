@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../services/auth_services.dart';
+import '../data/services/auth_services.dart';
 import 'actual.dart';
 
 class dash extends StatefulWidget {

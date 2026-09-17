@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '194467807514',
     projectId: 'kishal-stylish',
     storageBucket: 'kishal-stylish.firebasestorage.app',
-    iosBundleId: 'com.example.untitled',
+    iosBundleId: 'com.example.stylish',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '194467807514',
     projectId: 'kishal-stylish',
     storageBucket: 'kishal-stylish.firebasestorage.app',
-    iosBundleId: 'com.example.untitled',
+    iosBundleId: 'com.example.stylish',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

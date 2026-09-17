@@ -1,12 +1,8 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
 class AuthService {
-
-
 final FirebaseAuth _auth = FirebaseAuth.instance;
-
 final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 Future<UserCredential> createAccount({
 required String email,
@@ -27,8 +23,6 @@ email: email,
 password: password,
 );
 }
-
-
 Future<UserCredential?> signInWithGoogle() async {
 try {
 
@@ -39,12 +33,8 @@ try {
 
 final GoogleSignInAccount googleUser =
 await _googleSignIn.authenticate();
-
-
 final GoogleSignInAuthentication googleAuth =
 googleUser.authentication;
-
-
 final OAuthCredential credential =
 GoogleAuthProvider.credential(
 idToken: googleAuth.idToken,
@@ -57,7 +47,6 @@ return userCredential;
 } on FirebaseAuthException catch (e) {
 print('Firebase Auth Error: ${e.code}');
 print('Message: ${e.message}');
-
 return null;
 } catch (e) {
 print('Google Sign-In Error: $e');
@@ -65,8 +54,6 @@ print('Google Sign-In Error: $e');
 return null;
 }
 }
-
-
 Future<void> sendPasswordResetEmail({
 required String email,
 }) async {
@@ -115,7 +102,6 @@ await _auth.signOut();
 print('Logout Error: $e');
 }
 }
-
 Future<void> signOut() async {
 await logout();
 }

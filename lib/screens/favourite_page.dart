@@ -1,177 +1,192 @@
 import 'package:flutter/material.dart';
-import 'package:untitled/provider/favorite_data.dart';
-import 'package:untitled/widget/product_detailspage.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class FavouritePage extends StatefulWidget {
-  const FavouritePage({super.key});
+import '../bloc/favorite/favorite_bloc.dart';
+import '../bloc/favorite/favorite_event.dart';
+import '../bloc/favorite/favorite_state.dart';
 
-  @override
-  State<FavouritePage> createState() => _FavouritePageState();
-}
 
-class _FavouritePageState extends State<FavouritePage> {
+class FavoritePage extends StatelessWidget {
+  const FavoritePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
+
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
         title: const Text(
           'Favorites',
           style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-        centerTitle: true,
       ),
 
-      body: ValueListenableBuilder<List<Map<String, dynamic>>>(
-        valueListenable: FavoriteData.favorites,
+      body: BlocBuilder<FavoriteBloc, FavoriteState>(
+        builder: (context, state) {
 
-        builder: (context, favorites, child) {
-          if (favorites.isEmpty) {
+          if (state is FavoriteLoading) {
             return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.favorite_border,
-                    size: 80,
-                    color: Colors.grey,
-                  ),
+              child: CircularProgressIndicator(),
+            );
+          }
 
-                  SizedBox(height: 15),
 
-                  Text(
-                    'No Favorites',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  SizedBox(height: 5),
-
-                  Text(
-                    'Your favorite products will appear here',
-                    style: TextStyle(
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
+          if (state is FavoriteError) {
+            return Center(
+              child: Text(
+                state.message,
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 16,
+                ),
               ),
             );
           }
-          return GridView.builder(
-            padding: const EdgeInsets.all(15),
 
-            gridDelegate:
-            const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.65,
-            ),
+          if (state is FavoriteLoaded) {
+            final favorites = state.favorites;
 
-            itemCount: favorites.length,
-
-            itemBuilder: (context, index) {
-              final product = favorites[index];
-
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProductDetailsPage(
-                        product: product,
-                        allProducts: favorites,
+            if (favorites.isEmpty) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.favorite_border,
+                      size: 80,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 15),
+                    Text(
+                      'No Favorites Yet',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  );
-                },
+                    SizedBox(height: 8),
+                    Text(
+                      'Add products to your favorites',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return GridView.builder(
+              padding: const EdgeInsets.all(16),
 
-                child: Container(
+              gridDelegate:
+              const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 15,
+                childAspectRatio: 0.68,
+              ),
+
+              itemCount: favorites.length,
+
+              itemBuilder: (context, index) {
+                final product = favorites[index];
+
+                return Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-
-                    boxShadow: const [
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
                       BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 5,
-                        offset: Offset(0, 2),
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
 
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                    CrossAxisAlignment.start,
                     children: [
-                      Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius:
-                            const BorderRadius.vertical(
-                              top: Radius.circular(12),
+                      // Image
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius:
+                              const BorderRadius.vertical(
+                                top: Radius.circular(15),
+                              ),
+                              child: Image.network(
+                                product['image']?.toString() ?? '',
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+
+                                errorBuilder:
+                                    (context, error, stackTrace) {
+                                  return const Center(
+                                    child: Icon(
+                                      Icons.image_not_supported,
+                                      size: 40,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
 
-                            child: Image.asset(
-                              product['image'] ?? '',
 
-                              width: double.infinity,
-                              height: 180,
-
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-
-                          Positioned(
-                            top: 8,
-                            right: 8,
-
-                            child: GestureDetector(
-                              onTap: () {
-                                FavoriteData.toggleFavorite(
-                                  product,
-                                );
-                              },
-
-                              child: Container(
-                                width: 40,
-                                height: 40,
-
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-
-                                child: const Icon(
-                                  Icons.favorite,
-                                  color: Colors.pink,
-                                  size: 23,
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: GestureDetector(
+                                onTap: () {
+                                  context
+                                      .read<FavoriteBloc>()
+                                      .add(
+                                    RemoveFavorite(index),
+                                  );
+                                },
+                                child: Container(
+                                  padding:
+                                  const EdgeInsets.all(7),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.favorite,
+                                    color: Color(0xFFF83758),
+                                    size: 20,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
 
+
+                      Padding(
+                        padding: const EdgeInsets.all(10),
                         child: Column(
                           crossAxisAlignment:
                           CrossAxisAlignment.start,
-
                           children: [
                             Text(
-                              product['name'] ?? '',
-
+                              product['name']?.toString() ?? '',
                               maxLines: 1,
-
-                              overflow:
-                              TextOverflow.ellipsis,
-
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 15,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -179,98 +194,37 @@ class _FavouritePageState extends State<FavouritePage> {
                             const SizedBox(height: 5),
 
                             Text(
-                              product['desc'] ?? '',
-
+                              product['desc']?.toString() ?? '',
                               maxLines: 2,
-
-                              overflow:
-                              TextOverflow.ellipsis,
-
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 12,
                                 color: Colors.grey,
+                                fontSize: 12,
                               ),
                             ),
 
                             const SizedBox(height: 8),
 
-                            Row(
-                              children: [
-                                Text(
-                                  product['price'] ?? '',
-
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-
-                                const SizedBox(width: 6),
-
-                                Text(
-                                  product['oldPrice'] ?? '',
-
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                    decoration:
-                                    TextDecoration.lineThrough,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 5),
-
                             Text(
-                              product['discount'] ?? '',
-
+                              product['price']?.toString() ?? '₹0',
                               style: const TextStyle(
-                                color: Colors.pink,
-                                fontSize: 12,
+                                color: Color(0xFFF83758),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ),
-
-                            const SizedBox(height: 5),
-
-                            const Row(
-                              children: [
-                                Icon(
-                                  Icons.star,
-                                  color: Colors.amber,
-                                  size: 17,
-                                ),
-                                Icon(
-                                  Icons.star,
-                                  color: Colors.amber,
-                                  size: 17,
-                                ),
-                                Icon(
-                                  Icons.star,
-                                  color: Colors.amber,
-                                  size: 17,
-                                ),
-                                Icon(
-                                  Icons.star,
-                                  color: Colors.amber,
-                                  size: 17,
-                                ),
-                                Icon(
-                                  Icons.star,
-                                  color: Colors.grey,
-                                  size: 17,
-                                ),
-                              ],
                             ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                ),
-              );
-            },
-          );
+                );
+              },
+            );
+          }
+
+
+          return const SizedBox();
         },
       ),
     );

@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:untitled/screens/payment.dart';
-import 'package:untitled/screens/check.dart';
+import 'package:stylish/screens/payment.dart';
+import 'package:stylish/screens/check.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class PlaceOrderPage extends StatefulWidget {
@@ -29,20 +29,14 @@ super.initState();
 loadAddress();
 }
 
-// ------------------------------------------------------------
-// LOAD SELECTED ADDRESS
-// ------------------------------------------------------------
+
 
 Future<void> loadAddress() async {
 final prefs = await SharedPreferences.getInstance();
 
-// This is the SAME switch value used in Checkout.
+
 final useBusinessAddress =
 prefs.getBool('useBusinessAddress') ?? false;
-
-// ----------------------------------------------------------
-// PERSONAL ADDRESS
-// ----------------------------------------------------------
 
 final fullName =
 prefs.getString('fullName') ?? '';
