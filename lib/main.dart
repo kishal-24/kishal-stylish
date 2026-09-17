@@ -16,6 +16,8 @@ import 'package:stylish/screens/login.dart';
 import 'package:stylish/widget/bot.dart';
 import 'package:stylish/widget/loading_skeleton.dart';
 
+import 'bloc/order/order_bloc.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -36,6 +38,9 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => CartBloc()..add(const LoadCart())),
         BlocProvider(create: (_) => FavoriteBloc()),
         BlocProvider(create: (_) => ProductBloc()..add(const FetchProducts())),
+        BlocProvider(
+          create: (_) => OrderBloc(),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

@@ -15,7 +15,7 @@ import '../bloc/product/product_state.dart';
 import '../widget/custom_appbar.dart';
 import '../widget/loading_skeleton.dart';
 
-import 'product_details_page.dart';
+import '../widget/product_detailspage.dart';
 
 class wish extends StatefulWidget {
   final bool showDiscount;
@@ -418,9 +418,6 @@ class _WishState extends State<wish> {
                   ),
                 ),
 
-                // ==================================================
-                // SEARCH SUGGESTIONS
-                // ==================================================
 
                 if (suggestions.isNotEmpty &&
                     searchText.isNotEmpty)
@@ -502,11 +499,6 @@ class _WishState extends State<wish> {
                   ),
 
                 const SizedBox(height: 20),
-
-                // ==================================================
-                // ITEM COUNT + SORT + FILTER
-                // ==================================================
-
                 Row(
                   mainAxisAlignment:
                   MainAxisAlignment
@@ -526,10 +518,6 @@ class _WishState extends State<wish> {
 
                     Row(
                       children: [
-                        // ==================================================
-                        // SORT
-                        // ==================================================
-
                         GestureDetector(
                           onTap: () {
                             showSortBottomSheet(
@@ -606,11 +594,6 @@ class _WishState extends State<wish> {
                         const SizedBox(
                           width: 10,
                         ),
-
-                        // ==================================================
-                        // FILTER
-                        // ==================================================
-
                         GestureDetector(
                           onTap: () {
                             showFilterBottomSheet(
@@ -689,11 +672,6 @@ class _WishState extends State<wish> {
                 ),
 
                 const SizedBox(height: 20),
-
-                // ==================================================
-                // PRODUCT GRID
-                // ==================================================
-
                 if (filteredProducts.isEmpty)
                   const Padding(
                     padding:
@@ -732,17 +710,11 @@ class _WishState extends State<wish> {
                     },
                   ),
 
-                // ==================================================
-                // LOAD MORE SKELETON
-                // ==================================================
 
                 bottomLoadingSkeleton(
                   state,
                 ),
 
-                // ==================================================
-                // END MESSAGE
-                // ==================================================
 
                 if (!state.hasMore &&
                     products.isNotEmpty)
@@ -773,9 +745,6 @@ class _WishState extends State<wish> {
     );
   }
 
-  // ============================================================
-  // SORT BOTTOM SHEET
-  // ============================================================
 
   void showSortBottomSheet(
       List<Map<String, dynamic>> products,
@@ -926,11 +895,6 @@ class _WishState extends State<wish> {
       },
     );
   }
-
-  // ============================================================
-  // FILTER BOTTOM SHEET
-  // ============================================================
-
   void showFilterBottomSheet(
       List<Map<String, dynamic>> products,
       ) {
@@ -1066,9 +1030,6 @@ class _WishState extends State<wish> {
     );
   }
 
-  // ============================================================
-  // PRODUCT CARD
-  // ============================================================
 
   Widget productCard(
       Map<String, dynamic> product,
@@ -1137,9 +1098,7 @@ class _WishState extends State<wish> {
               CrossAxisAlignment.start,
 
               children: [
-                // ==================================================
-                // IMAGE
-                // ==================================================
+
 
                 Stack(
                   children: [
@@ -1233,9 +1192,7 @@ class _WishState extends State<wish> {
                       ),
                     ),
 
-                    // ==================================================
-                    // FAVORITE
-                    // ==================================================
+
 
                     Positioned(
                       top: 10,
@@ -1298,9 +1255,7 @@ class _WishState extends State<wish> {
                   ],
                 ),
 
-                // ==================================================
-                // DETAILS
-                // ==================================================
+
 
                 Padding(
                   padding:

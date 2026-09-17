@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1089,37 +1090,24 @@ class _checkoutState extends State<checkout> {
                                 return;
                               }
 
-
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder:
-                                      (context) => 
-                                  PlaceOrderPage(cartItems: cartItems),
+                                  builder: (context) => const PlaceOrderPage(),
                                 ),
                               );
                             },
-                            style:
-                            ElevatedButton
-                                .styleFrom(
-                              backgroundColor:
-                              Colors.pink,
-                              foregroundColor:
-                              Colors.white,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.pink,
+                              foregroundColor: Colors.white,
                               elevation: 0,
-                              shape:
-                              RoundedRectangleBorder(
-                                borderRadius:
-                                BorderRadius
-                                    .circular(
-                                    12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                             child: Text(
                               'Place Order',
-                              style:
-                              GoogleFonts
-                                  .poppins(
+                              style: GoogleFonts.poppins(
                                 fontSize: 17,
                                 color:
                                 Colors.white,

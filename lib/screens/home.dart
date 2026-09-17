@@ -13,7 +13,8 @@ import '../bloc/product/product_state.dart';
 import '../widget/custom_appbar.dart';
 import '../widget/loading_skeleton.dart';
 
-import 'product_details_page.dart';
+import '../widget/product_detailspage.dart';
+
 import 'shop.dart';
 import 'wish.dart';
 import 'dash.dart';

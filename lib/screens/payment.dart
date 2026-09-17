@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 
-import 'package:stylish/data/api/api_service.dart';
+import '../bloc/cart/cart_bloc.dart';
+import '../bloc/cart/cart_event.dart';
+import '../bloc/cart/cart_state.dart';
 
+import '../bloc/order/order_bloc.dart';
+import '../bloc/order/order_event.dart';
+import '../bloc/order/order_state.dart';
 
-import '../provider/cart_data.dart';
 import '../widget/bot.dart';
 
 class PaymentPage extends StatefulWidget {
-  final double totalAmount;
-  final List<Map<String, dynamic>> cartItems;
   final String selectedAddress;
 
   const PaymentPage({
     super.key,
-    required this.totalAmount,
-    required this.cartItems,
     required this.selectedAddress,
   });
 
@@ -24,86 +25,22 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage> {
-  bool isLoading = false;
 
+  // ============================================================
+  // ERROR TOAST
+  // ============================================================
 
-
-  Future<void> placeOrder() async {
-    try {
-
-
-      if (widget.cartItems.isEmpty) {
-        throw Exception('Cart is empty');
-      }
-
-
-
-      final List<Map<String, dynamic>> products =
-      widget.cartItems.map((item) {
-        return {
-          'id': item['id'],
-          'quantity': item['quantity'] ?? 1,
-        };
-      }).toList();
-
-
-      final result = await ApiService.createOrder(
-        userId: 1,
-        products: products,
-        totalAmount: widget.totalAmount + 30,
-        selectedAddress: widget.selectedAddress,
-      );
-
-      if (!mounted) return;
-
-
-
-      if (result == null) {
-        setState(() {
-          isLoading = false;
-        });
-
-        showErrorToast('Order API failed');
-
-        return;
-      }
-
-
-      debugPrint('ORDER CREATED SUCCESSFULLY');
-      debugPrint(result.toString());
-
-
-
-      await showOrderSuccessDialog();
-
-      if (!mounted) return;
-
-
-      await cart.clearCart();
-
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const bot(),
-        ),
-            (route) => false,
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        isLoading = false;
-      });
-
-      debugPrint('ORDER ERROR: $e');
-
-      showErrorToast(
-        'Order failed',
-      );
-    }
+  void showErrorToast(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
   }
 
+  // ============================================================
+  // SUCCESS DIALOG
+  // ============================================================
 
   Future<void> showOrderSuccessDialog() async {
     await showDialog(
@@ -124,20 +61,23 @@ class _PaymentPageState extends State<PaymentPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+
                   Lottie.asset(
                     'assets/DONE.json',
                     width: 110,
                     height: 110,
                     repeat: false,
                     onLoaded: (composition) {
-                      Future.delayed(const Duration(seconds: 3), () {
-                        if (Navigator.of(dialogContext).canPop()) {
-                          Navigator.of(dialogContext).pop();
-                        }
-                      });
+                      Future.delayed(
+                        const Duration(seconds: 3),
+                            () {
+                          if (Navigator.of(dialogContext).canPop()) {
+                            Navigator.of(dialogContext).pop();
+                          }
+                        },
+                      );
                     },
                   ),
-
 
                   const SizedBox(height: 10),
 
@@ -169,261 +109,389 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-
-
-  void showErrorToast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
-  }
-
-
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
-    final double finalTotal =
-        widget.totalAmount + 30;
+    return BlocListener<OrderBloc, OrderState>(
+      listener: (context, orderState) async {
 
-    return Scaffold(
-      backgroundColor: const Color(0xffFDFDFD),
+        // ======================================================
+        // ORDER SUCCESS
+        // ======================================================
 
+        if (orderState is OrderSuccess) {
 
+          await showOrderSuccessDialog();
 
-      appBar: AppBar(
-        backgroundColor:
-        const Color(0xffFDFDFD),
+          if (!mounted) return;
 
-        elevation: 0,
+          // Clear cart using CartBloc
+          context.read<CartBloc>().add(
+            const ClearCart(),
+          );
 
-        centerTitle: true,
+          // Go back to bottom navigation
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const bot(),
+            ),
+                (route) => false,
+          );
+        }
 
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.black,
-            size: 20,
+        // ======================================================
+        // ORDER ERROR
+        // ======================================================
+
+        if (orderState is OrderError) {
+          showErrorToast(orderState.message);
+        }
+      },
+
+      child: Scaffold(
+        backgroundColor: const Color(0xffFDFDFD),
+
+        // ======================================================
+        // APP BAR
+        // ======================================================
+
+        appBar: AppBar(
+          backgroundColor: const Color(0xffFDFDFD),
+          elevation: 0,
+          centerTitle: true,
+
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.black,
+              size: 20,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
           ),
 
-          onPressed: isLoading
-              ? null
-              : () {
-            Navigator.pop(context);
-          },
-        ),
-
-        title: const Text(
-          'Checkout',
-
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+          title: const Text(
+            'Checkout',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
-      ),
 
+        // ======================================================
+        // CART BLOC
+        // ======================================================
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(15),
+        body: BlocBuilder<CartBloc, CartState>(
+          builder: (context, cartState) {
 
-        child: Column(
-          crossAxisAlignment:
-          CrossAxisAlignment.start,
+            // ==================================================
+            // CART LOADING
+            // ==================================================
 
-          children: [
-            const SizedBox(height: 20),
-
-
-            const Text(
-              'Order Summary',
-
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Row(
-              mainAxisAlignment:
-              MainAxisAlignment.spaceBetween,
-
-              children: [
-                const Text(
-                  'Order',
-
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+            if (cartState is CartLoading) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xffF83758),
                 ),
+              );
+            }
 
-                Text(
-                  '₹ ${widget.totalAmount.toStringAsFixed(2)}',
+            // ==================================================
+            // CART ERROR
+            // ==================================================
 
+            if (cartState is CartError) {
+              return Center(
+                child: Text(
+                  cartState.message,
                   style: const TextStyle(
-                    fontSize: 14,
+                    color: Colors.red,
                   ),
                 ),
-              ],
-            ),
+              );
+            }
 
-            const SizedBox(height: 15),
+            // ==================================================
+            // CART LOADED
+            // ==================================================
 
-            Row(
-              mainAxisAlignment:
-              MainAxisAlignment.spaceBetween,
+            if (cartState is CartLoaded) {
 
-              children: const [
-                Text(
-                  'Shipping',
+              final cartItems = cartState.cartItems;
 
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
+              final double totalAmount =
+                  cartState.totalPrice;
 
-                Text(
-                  '₹ 30',
+              final double finalTotal =
+                  totalAmount + 30;
 
-                  style: TextStyle(
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
+              // ================================================
+              // EMPTY CART
+              // ================================================
 
-            const Divider(
-              height: 30,
-            ),
-
-            Row(
-              mainAxisAlignment:
-              MainAxisAlignment.spaceBetween,
-
-              children: [
-                const Text(
-                  'Total',
-
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-
-                Text(
-                  '₹ ${finalTotal.toStringAsFixed(2)}',
-
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            const Text(
-              'Payment Method',
-
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            paymentMethod(
-              image: 'assets/visa.png',
-            ),
-
-            const SizedBox(height: 15),
-
-
-            paymentMethod(
-              image: 'assets/paypal.png',
-            ),
-
-            const SizedBox(height: 15),
-
-
-            paymentMethod(
-              image: 'assets/maes.png',
-            ),
-
-            const SizedBox(height: 30),
-
-
-
-            Center(
-              child: SizedBox(
-                width: 250,
-                height: 55,
-
-                child: ElevatedButton(
-                  style:
-                  ElevatedButton.styleFrom(
-                    backgroundColor:
-                    const Color(0xffF83758),
-
-                    disabledBackgroundColor:
-                    const Color(0xffF83758),
-
-                    shape:
-                    RoundedRectangleBorder(
-                      borderRadius:
-                      BorderRadius.circular(10),
-                    ),
-                  ),
-
-                  onPressed: isLoading
-                      ? null
-                      : () async {
-                    setState(() {
-                      isLoading = true;
-                    });
-
-
-                    await placeOrder();
-                  },
-
-                  child: isLoading
-                      ? const SizedBox(
-                    width: 24,
-                    height: 24,
-
-                    child:
-                    CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
-                  )
-                      : const Text(
-                    'Continue',
-
+              if (cartItems.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'Your cart is empty',
                     style: TextStyle(
-                      fontSize: 17,
-                      fontWeight:
-                      FontWeight.bold,
-                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-              ),
-            ),
+                );
+              }
 
-            const SizedBox(height: 20),
-          ],
+              // ================================================
+              // PAYMENT BODY
+              // ================================================
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(15),
+
+                child: Column(
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
+
+                  children: [
+
+                    const SizedBox(height: 20),
+
+                    // ==========================================
+                    // ORDER SUMMARY
+                    // ==========================================
+
+                    const Text(
+                      'Order Summary',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ==========================================
+                    // ORDER PRICE
+                    // ==========================================
+
+                    Row(
+                      mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
+
+                      children: [
+                        const Text(
+                          'Order',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+
+                        Text(
+                          '₹ ${totalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // ==========================================
+                    // SHIPPING
+                    // ==========================================
+
+                    Row(
+                      mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
+
+                      children: const [
+                        Text(
+                          'Shipping',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+
+                        Text(
+                          '₹ 30',
+                          style: TextStyle(
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const Divider(
+                      height: 30,
+                    ),
+
+                    // ==========================================
+                    // TOTAL
+                    // ==========================================
+
+                    Row(
+                      mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
+
+                      children: [
+                        const Text(
+                          'Total',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+
+                        Text(
+                          '₹ ${finalTotal.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // ==========================================
+                    // PAYMENT METHOD
+                    // ==========================================
+
+                    const Text(
+                      'Payment Method',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    paymentMethod(
+                      image: 'assets/visa.png',
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    paymentMethod(
+                      image: 'assets/paypal.png',
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    paymentMethod(
+                      image: 'assets/maes.png',
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // ==========================================
+                    // CONTINUE BUTTON
+                    // ==========================================
+
+                    BlocBuilder<OrderBloc, OrderState>(
+                      builder: (context, orderState) {
+
+                        final bool isLoading =
+                        orderState is OrderLoading;
+
+                        return Center(
+                          child: SizedBox(
+                            width: 250,
+                            height: 55,
+
+                            child: ElevatedButton(
+                              style:
+                              ElevatedButton.styleFrom(
+                                backgroundColor:
+                                const Color(0xffF83758),
+
+                                disabledBackgroundColor:
+                                const Color(0xffF83758),
+
+                                shape:
+                                RoundedRectangleBorder(
+                                  borderRadius:
+                                  BorderRadius.circular(10),
+                                ),
+                              ),
+
+                              onPressed: isLoading
+                                  ? null
+                                  : () {
+
+                                // ======================
+                                // SEND ORDER EVENT
+                                // ======================
+
+                                context
+                                    .read<OrderBloc>()
+                                    .add(
+                                  PlaceOrder(
+                                    cartItems: cartItems,
+                                    totalAmount:
+                                    totalAmount,
+                                    selectedAddress:
+                                    widget
+                                        .selectedAddress,
+                                  ),
+                                );
+                              },
+
+                              child: isLoading
+                                  ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child:
+                                CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                                  : const Text(
+                                'Continue',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight:
+                                  FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              );
+            }
+
+            return const SizedBox();
+          },
         ),
       ),
     );
   }
+
+  // ============================================================
+  // PAYMENT METHOD WIDGET
+  // ============================================================
+
   Widget paymentMethod({
     required String image,
   }) {
@@ -434,8 +502,7 @@ class _PaymentPageState extends State<PaymentPage> {
       decoration: BoxDecoration(
         color: Colors.white,
 
-        borderRadius:
-        BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
 
         border: Border.all(
           color: Colors.grey.shade300,
@@ -443,8 +510,7 @@ class _PaymentPageState extends State<PaymentPage> {
       ),
 
       child: Padding(
-        padding:
-        const EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           horizontal: 12,
         ),
 

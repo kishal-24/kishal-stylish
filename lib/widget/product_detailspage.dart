@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:stylish/screens/Placeorderpage.dart';
-import 'package:stylish/provider/cart_data.dart';
+
+
+
 import 'package:stylish/screens/cart_page.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+
+import '../bloc/cart/cart_bloc.dart';
+import '../bloc/cart/cart_event.dart';
+import '../provider/cart_data.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../screens/Placeorderpage.dart';
+
 
 class ProductDetailsPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -314,10 +322,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                               cartProduct['selectedSize'] = selectedSize;
 
-                              cart.addToCart(cartProduct);
                               setState(() {
                                 isAddedToCart = true;
                               });
+
+                              context.read<CartBloc>().add(
+                                AddCartItem(cartProduct),
+                              );
                               await Future.delayed(
                                 const Duration(milliseconds: 1500),
                               );
@@ -340,13 +351,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                 gradient: LinearGradient(
                                   colors: isAddedToCart
                                       ? const [
-                                          Color(0xFFA04B43),
-                                          Color(0xFF7D3C2E),
-                                        ]
+                                    Color(0xFFA04B43),
+                                    Color(0xFF7D3C2E),
+                                  ]
                                       : const [
-                                          Color(0xFF1976D2),
-                                          Color(0xFF1565C0),
-                                        ],
+                                    Color(0xFF1976D2),
+                                    Color(0xFF1565C0),
+                                  ],
                                 ),
                               ),
 
@@ -364,13 +375,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                       gradient: LinearGradient(
                                         colors: isAddedToCart
                                             ? const [
-                                                Color(0xFFBB6D66),
-                                                Color(0xFFA04B43),
-                                              ]
+                                          Color(0xFFBB6D66),
+                                          Color(0xFFA04B43),
+                                        ]
                                             : const [
-                                                Color(0xFF42A5F5),
-                                                Color(0xFF1565C0),
-                                              ],
+                                          Color(0xFF42A5F5),
+                                          Color(0xFF1565C0),
+                                        ],
                                       ),
                                     ),
 
@@ -381,14 +392,14 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                                       transitionBuilder:
                                           (
-                                            Widget child,
-                                            Animation<double> animation,
+                                          Widget child,
+                                          Animation<double> animation,
                                           ) {
-                                            return ScaleTransition(
-                                              scale: animation,
-                                              child: child,
-                                            );
-                                          },
+                                        return ScaleTransition(
+                                          scale: animation,
+                                          child: child,
+                                        );
+                                      },
 
                                       child: Icon(
                                         isAddedToCart
@@ -413,17 +424,17 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                                       transitionBuilder:
                                           (
-                                            Widget child,
-                                            Animation<double> animation,
+                                          Widget child,
+                                          Animation<double> animation,
                                           ) {
-                                            return FadeTransition(
-                                              opacity: animation,
-                                              child: ScaleTransition(
-                                                scale: animation,
-                                                child: child,
-                                              ),
-                                            );
-                                          },
+                                        return FadeTransition(
+                                          opacity: animation,
+                                          child: ScaleTransition(
+                                            scale: animation,
+                                            child: child,
+                                          ),
+                                        );
+                                      },
 
                                       child: Text(
                                         isAddedToCart
@@ -472,7 +483,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => PlaceOrderPage(cartItems: [orderProduct]),
+                                builder: (context) => PlaceOrderPage(),
                               ),
                             );
                           },
@@ -632,12 +643,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       children: suggestions
           .map(
             (product) => Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: suggestionCard(product),
-              ),
-            ),
-          )
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: suggestionCard(product),
+          ),
+        ),
+      )
           .toList(),
     );
   }

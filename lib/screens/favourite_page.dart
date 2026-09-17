@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/favorite/favorite_bloc.dart';
 import '../bloc/favorite/favorite_event.dart';
 import '../bloc/favorite/favorite_state.dart';
-
+import '../widget/product_detailspage.dart';
 
 class FavoritePage extends StatelessWidget {
   const FavoritePage({super.key});
@@ -14,10 +14,12 @@ class FavoritePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
 
+      // ================= APP BAR =================
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+
         title: const Text(
           'Favorites',
           style: TextStyle(
@@ -28,16 +30,20 @@ class FavoritePage extends StatelessWidget {
         ),
       ),
 
+      // ================= BODY =================
       body: BlocBuilder<FavoriteBloc, FavoriteState>(
         builder: (context, state) {
 
+          // ================= LOADING =================
           if (state is FavoriteLoading) {
             return const Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                color: Color(0xFFF83758),
+              ),
             );
           }
 
-
+          // ================= ERROR =================
           if (state is FavoriteError) {
             return Center(
               child: Text(
@@ -50,9 +56,11 @@ class FavoritePage extends StatelessWidget {
             );
           }
 
+          // ================= FAVORITES LOADED =================
           if (state is FavoriteLoaded) {
             final favorites = state.favorites;
 
+            // ================= EMPTY =================
             if (favorites.isEmpty) {
               return const Center(
                 child: Column(
@@ -63,7 +71,9 @@ class FavoritePage extends StatelessWidget {
                       size: 80,
                       color: Colors.grey,
                     ),
+
                     SizedBox(height: 15),
+
                     Text(
                       'No Favorites Yet',
                       style: TextStyle(
@@ -71,7 +81,9 @@ class FavoritePage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     SizedBox(height: 8),
+
                     Text(
                       'Add products to your favorites',
                       style: TextStyle(
@@ -83,6 +95,8 @@ class FavoritePage extends StatelessWidget {
                 ),
               );
             }
+
+            // ================= GRID =================
             return GridView.builder(
               padding: const EdgeInsets.all(16),
 
@@ -99,131 +113,188 @@ class FavoritePage extends StatelessWidget {
               itemBuilder: (context, index) {
                 final product = favorites[index];
 
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+                return GestureDetector(
+
+                  // ================= PRODUCT TAP =================
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProductDetailsPage(
+                          product: product,
+                          allProducts: favorites,
+                        ),
                       ),
-                    ],
-                  ),
+                    );
+                  },
 
-                  child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                    children: [
-                      // Image
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius:
-                              const BorderRadius.vertical(
-                                top: Radius.circular(15),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+
+                    child: Column(
+                      crossAxisAlignment:
+                      CrossAxisAlignment.start,
+
+                      children: [
+
+                        // ================= IMAGE =================
+                        Expanded(
+                          child: Stack(
+                            children: [
+
+                              ClipRRect(
+                                borderRadius:
+                                const BorderRadius.vertical(
+                                  top: Radius.circular(15),
+                                ),
+
+                                child: Image.network(
+                                  product['image']
+                                      ?.toString() ??
+                                      '',
+
+                                  width: double.infinity,
+
+                                  fit: BoxFit.cover,
+
+                                  errorBuilder:
+                                      (context, error, stackTrace) {
+                                    return const Center(
+                                      child: Icon(
+                                        Icons
+                                            .image_not_supported,
+                                        size: 40,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
-                              child: Image.network(
-                                product['image']?.toString() ?? '',
-                                width: double.infinity,
-                                fit: BoxFit.cover,
 
-                                errorBuilder:
-                                    (context, error, stackTrace) {
-                                  return const Center(
-                                    child: Icon(
-                                      Icons.image_not_supported,
-                                      size: 40,
-                                      color: Colors.grey,
+                              // ================= FAVORITE BUTTON =================
+                              Positioned(
+                                top: 8,
+                                right: 8,
+
+                                child: GestureDetector(
+                                  onTap: () {
+
+                                    context
+                                        .read<FavoriteBloc>()
+                                        .add(
+                                      RemoveFavorite(index),
+                                    );
+                                  },
+
+                                  child: Container(
+                                    padding:
+                                    const EdgeInsets.all(7),
+
+                                    decoration:
+                                    const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
                                     ),
-                                  );
-                                },
-                              ),
-                            ),
 
-
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: GestureDetector(
-                                onTap: () {
-                                  context
-                                      .read<FavoriteBloc>()
-                                      .add(
-                                    RemoveFavorite(index),
-                                  );
-                                },
-                                child: Container(
-                                  padding:
-                                  const EdgeInsets.all(7),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.favorite,
-                                    color: Color(0xFFF83758),
-                                    size: 20,
+                                    child: const Icon(
+                                      Icons.favorite,
+                                      color:
+                                      Color(0xFFF83758),
+                                      size: 20,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
 
+                        // ================= PRODUCT DETAILS =================
+                        Padding(
+                          padding: const EdgeInsets.all(10),
 
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              product['name']?.toString() ?? '',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                          child: Column(
+                            crossAxisAlignment:
+                            CrossAxisAlignment.start,
+
+                            children: [
+
+                              // Product name
+                              Text(
+                                product['name']
+                                    ?.toString() ??
+                                    '',
+
+                                maxLines: 1,
+
+                                overflow:
+                                TextOverflow.ellipsis,
+
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight:
+                                  FontWeight.bold,
+                                ),
                               ),
-                            ),
 
-                            const SizedBox(height: 5),
+                              const SizedBox(height: 5),
 
-                            Text(
-                              product['desc']?.toString() ?? '',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
+                              // Description
+                              Text(
+                                product['desc']
+                                    ?.toString() ??
+                                    '',
+
+                                maxLines: 2,
+
+                                overflow:
+                                TextOverflow.ellipsis,
+
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                ),
                               ),
-                            ),
 
-                            const SizedBox(height: 8),
+                              const SizedBox(height: 8),
 
-                            Text(
-                              product['price']?.toString() ?? '₹0',
-                              style: const TextStyle(
-                                color: Color(0xFFF83758),
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                              // Price
+                              Text(
+                                product['price']
+                                    ?.toString() ??
+                                    '₹0',
+
+                                style: const TextStyle(
+                                  color:
+                                  Color(0xFFF83758),
+                                  fontSize: 16,
+                                  fontWeight:
+                                  FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
             );
           }
 
-
+          // ================= INITIAL =================
           return const SizedBox();
         },
       ),

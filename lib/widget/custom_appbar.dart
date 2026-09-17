@@ -1,6 +1,10 @@
+
 import 'package:flutter/material.dart';
-import 'package:stylish/provider/cart_data.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:stylish/screens/cart_page.dart';
+
+import '../bloc/cart/cart_bloc.dart';
+import '../bloc/cart/cart_state.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -34,9 +38,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         height: 45,
       ),
       actions: [
-        ValueListenableBuilder<int>(
-          valueListenable: cart.cartCount,
-          builder: (context, count, child) {
+        BlocBuilder<CartBloc, CartState>(
+          builder: (context, state) {
+            int count = 0;
+
+            if (state is CartLoaded) {
+              count = state.count;
+            }
+
             return Stack(
               clipBehavior: Clip.none,
               children: [
@@ -55,6 +64,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     size: 28,
                   ),
                 ),
+
                 if (count > 0)
                   Positioned(
                     right: 2,
