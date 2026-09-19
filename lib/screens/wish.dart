@@ -264,13 +264,7 @@ class _WishState extends State<Wish> {
 
 
 
-          if (products.isEmpty) {
-            return const Center(
-              child: Text(
-                'No products found',
-              ),
-            );
-          }
+
           return SingleChildScrollView(
             controller: scrollController,
             padding:
@@ -330,8 +324,7 @@ class _WishState extends State<Wish> {
                 ),
 
 
-                if (suggestions.isNotEmpty &&
-                    searchText.isNotEmpty)
+                if (searchText.isNotEmpty)
                   Container(
                     margin:
                     const EdgeInsets
@@ -352,17 +345,24 @@ class _WishState extends State<Wish> {
                         ),
                       ],
                     ),
-                    child:
-                    ListView.builder(
+                      child: suggestions.isEmpty
+                          ? Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.search_off),
+                            const SizedBox(width: 10),
+                            Text('No products found'),
+                          ],
+                        ),
+                      )
+                          : ListView.builder(
                       shrinkWrap: true,
                       physics:
                       const NeverScrollableScrollPhysics(),
-
                       itemCount:
                       suggestions.length,
-
-                      itemBuilder:
-                          (context, index) {
+                      itemBuilder: (context, index) {
                         final product =
                         suggestions[index];
 

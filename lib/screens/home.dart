@@ -386,9 +386,6 @@ class _homeState extends State<home> {
 
                 const SizedBox(height: 10),
 
-                // =====================================================
-                // API PRODUCTS
-                // =====================================================
 
                 SizedBox(
                   height: 400,
