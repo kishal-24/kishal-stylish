@@ -1172,7 +1172,9 @@ class _ProductDetailsPageState
     // ========================================================
     // AUTOMATICALLY SELECT FIRST SIZE
     // ========================================================
-
+    if (sizes.isEmpty || (sizes.length == 1 && sizes.first.isEmpty)) {
+      return const SizedBox.shrink();
+    }
     if (selectedSize.isEmpty ||
         !sizes.contains(
           selectedSize,
