@@ -8,7 +8,6 @@ import 'package:stylish/bloc/cart/cart_bloc.dart';
 import 'package:stylish/bloc/cart/cart_event.dart';
 import 'package:stylish/bloc/favorite/favorite_bloc.dart';
 import 'package:stylish/bloc/product/product_bloc.dart';
-import 'package:stylish/bloc/product/product_event.dart';
 import 'package:stylish/repository/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:stylish/screens/firebase_options.dart';
@@ -37,7 +36,11 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => AuthBloc(authRepository: AuthRepository())),
         BlocProvider(create: (_) => CartBloc()..add(const LoadCart())),
         BlocProvider(create: (_) => FavoriteBloc()),
-        BlocProvider(create: (_) => ProductBloc()..add(const FetchProducts())),
+
+
+    BlocProvider<ProductBloc>(
+    create: (context) => ProductBloc(),
+    ),
         BlocProvider(
           create: (_) => OrderBloc(),
         ),

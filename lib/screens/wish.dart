@@ -14,17 +14,16 @@ import '../bloc/product/product_state.dart';
 
 import '../widget/custom_appbar.dart';
 import '../widget/loading_skeleton.dart';
-
 import '../widget/product_detailspage.dart';
 
-class wish extends StatefulWidget {
+class Wish extends StatefulWidget {
   final bool showDiscount;
   final bool showPrice;
   final bool showDescription;
   final bool showOldPrice;
   final bool showRating;
 
-  const wish({
+  const Wish({
     super.key,
     this.showDiscount = true,
     this.showPrice = true,
@@ -34,10 +33,10 @@ class wish extends StatefulWidget {
   });
 
   @override
-  State<wish> createState() => _WishState();
+  State<Wish> createState() => _WishState();
 }
 
-class _WishState extends State<wish> {
+class _WishState extends State<Wish> {
   final TextEditingController searchController =
   TextEditingController();
 
@@ -45,8 +44,6 @@ class _WishState extends State<wish> {
   ScrollController();
 
   String searchText = '';
-
-  List<Map<String, dynamic>> filteredProducts = [];
 
   List<Map<String, dynamic>> suggestions = [];
 
@@ -56,12 +53,11 @@ class _WishState extends State<wish> {
 
     scrollController.addListener(_scrollListener);
 
-
+    // Fetch products
     context.read<ProductBloc>().add(
       const FetchProducts(),
     );
   }
-
 
 
   void _scrollListener() {
@@ -73,99 +69,69 @@ class _WishState extends State<wish> {
 
     if (position.pixels >=
         position.maxScrollExtent - 300) {
-      context.read<ProductBloc>().add(
-        const LoadMoreProducts(),
-      );
+      final productBloc = context.read<ProductBloc>();
+
+      final currentState = productBloc.state;
+
+      if (currentState is ProductLoaded) {
+        if (currentState.hasMore &&
+            !currentState.isLoadingMore) {
+          productBloc.add(
+            const LoadMoreProducts(),
+          );
+        }
+      }
     }
   }
 
 
-
-  void searchProduct(
-      String keyword,
-      List<Map<String, dynamic>> products,
-      ) {
-    final String search =
-    keyword.toLowerCase().trim();
-
+  void _onSearchChanged(String value) {
     setState(() {
-      searchText = keyword;
+      searchText = value;
+
+      final search = value.toLowerCase().trim();
 
       if (search.isEmpty) {
-        filteredProducts =
-        List<Map<String, dynamic>>.from(
-          products,
-        );
-      } else {
-        filteredProducts = products.where(
-              (product) {
-            final String name =
-                product['name']
-                    ?.toString()
-                    .toLowerCase() ??
-                    '';
-
-            return name.contains(search);
-          },
-        ).toList();
+        suggestions = [];
+        return;
       }
 
-      suggestions = [];
+      final currentState =
+          context.read<ProductBloc>().state;
+
+      if (currentState is ProductLoaded) {
+        suggestions = currentState.allProducts
+            .where((product) {
+          final name =
+              product['name']
+                  ?.toString()
+                  .toLowerCase() ??
+                  '';
+
+          return name.contains(search);
+        }).toList();
+      }
     });
+
+    // BLoC handles actual search
+    context.read<ProductBloc>().add(
+      SearchProducts(value),
+    );
   }
 
 
-
-  double getPrice(
-      Map<String, dynamic> product,
-      ) {
-    String price =
-        product['price']?.toString() ?? '0';
-
-    price = price
-        .replaceAll('₹', '')
-        .replaceAll(',', '')
-        .trim();
-
-    return double.tryParse(price) ?? 0;
-  }
-
-  void filterProducts(
-      double minPrice,
-      double maxPrice,
-      List<Map<String, dynamic>> products,
-      ) {
-    setState(() {
-      filteredProducts = products.where(
-            (product) {
-          final double price =
-          getPrice(product);
-
-          return price >= minPrice &&
-              price <= maxPrice;
-        },
-      ).toList();
-    });
-  }
-
-
-  void showAllProducts(
-      List<Map<String, dynamic>> products,
-      ) {
+  void _clearSearch() {
     searchController.clear();
 
     setState(() {
       searchText = '';
-
       suggestions = [];
-
-      filteredProducts =
-      List<Map<String, dynamic>>.from(
-        products,
-      );
     });
-  }
 
+    context.read<ProductBloc>().add(
+      const SearchProducts(''),
+    );
+  }
 
 
   @override
@@ -177,10 +143,7 @@ class _WishState extends State<wish> {
   }
 
 
-
-  Widget bottomLoadingSkeleton(
-      ProductState state,
-      ) {
+  Widget bottomLoadingSkeleton(ProductState state) {
     if (state is! ProductLoaded) {
       return const SizedBox.shrink();
     }
@@ -223,20 +186,12 @@ class _WishState extends State<wish> {
 
       body: BlocConsumer<ProductBloc, ProductState>(
         listener: (context, state) {
-          if (state is ProductLoaded) {
-            if (searchText.trim().isEmpty) {
-              setState(() {
-                filteredProducts =
-                List<Map<String, dynamic>>.from(
-                  state.products,
-                );
-              });
-            }
+          if (state is ProductError) {
+
           }
         },
 
         builder: (context, state) {
-
 
           if (state is ProductInitial ||
               state is ProductLoading) {
@@ -250,11 +205,9 @@ class _WishState extends State<wish> {
               child: Padding(
                 padding:
                 const EdgeInsets.all(20),
-
                 child: Column(
                   mainAxisSize:
                   MainAxisSize.min,
-
                   children: [
                     const Icon(
                       Icons.error_outline,
@@ -266,7 +219,6 @@ class _WishState extends State<wish> {
 
                     const Text(
                       'Failed to load products',
-
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight:
@@ -303,74 +255,49 @@ class _WishState extends State<wish> {
 
 
           if (state is! ProductLoaded) {
-            return const SizedBox();
+            return const SizedBox.shrink();
           }
+
+
 
           final products = state.products;
 
 
-          if (filteredProducts.isEmpty &&
-              searchText.isEmpty &&
-              products.isNotEmpty) {
-            filteredProducts =
-            List<Map<String, dynamic>>.from(
-              products,
+
+          if (products.isEmpty) {
+            return const Center(
+              child: Text(
+                'No products found',
+              ),
             );
           }
-
-
-
           return SingleChildScrollView(
             controller: scrollController,
-
             padding:
             const EdgeInsets.symmetric(
               horizontal: 20,
             ),
-
             child: Column(
               children: [
                 const SizedBox(height: 10),
 
 
                 TextField(
-                  controller:
-                  searchController,
+                  controller: searchController,
 
-                  onChanged: (value) {
-                    setState(() {
-                      searchText = value;
-
-                      final String search =
-                      value
-                          .toLowerCase()
-                          .trim();
-
-                      if (search.isEmpty) {
-                        suggestions = [];
-                      } else {
-                        suggestions =
-                            products.where(
-                                  (product) {
-                                final String name =
-                                    product['name']
-                                        ?.toString()
-                                        .toLowerCase() ??
-                                        '';
-
-                                return name
-                                    .contains(search);
-                              },
-                            ).toList();
-                      }
-                    });
-                  },
+                  onChanged: _onSearchChanged,
 
                   onSubmitted: (value) {
-                    searchProduct(
-                      value,
-                      products,
+                    context
+                        .read<ProductBloc>()
+                        .add(
+                      SearchProducts(value),
                     );
+
+                    setState(() {
+                      searchText = value;
+                      suggestions = [];
+                    });
                   },
 
                   decoration:
@@ -388,24 +315,8 @@ class _WishState extends State<wish> {
                       icon: const Icon(
                         Icons.close,
                       ),
-
-                      onPressed: () {
-                        searchController
-                            .clear();
-
-                        setState(() {
-                          searchText = '';
-
-                          suggestions = [];
-
-                          filteredProducts =
-                          List<
-                              Map<String,
-                                  dynamic>>.from(
-                            products,
-                          );
-                        });
-                      },
+                      onPressed:
+                      _clearSearch,
                     ),
 
                     border:
@@ -427,29 +338,23 @@ class _WishState extends State<wish> {
                         .symmetric(
                       horizontal: 10,
                     ),
-
                     decoration:
                     BoxDecoration(
                       color: Colors.white,
-
                       borderRadius:
                       BorderRadius.circular(
                         10,
                       ),
-
                       boxShadow: const [
                         BoxShadow(
                           blurRadius: 5,
-                          color:
-                          Colors.black12,
+                          color: Colors.black12,
                         ),
                       ],
                     ),
-
                     child:
                     ListView.builder(
                       shrinkWrap: true,
-
                       physics:
                       const NeverScrollableScrollPhysics(),
 
@@ -459,36 +364,33 @@ class _WishState extends State<wish> {
                       itemBuilder:
                           (context, index) {
                         final product =
-                        suggestions[
-                        index];
+                        suggestions[index];
 
-                        return ListTile(
-                          title: Text(
+                        final name =
                             product['name']
                                 ?.toString() ??
-                                '',
-                          ),
+                                '';
+
+                        return ListTile(
+                          title:
+                          Text(name),
 
                           onTap: () {
-                            final String
-                            productName =
-                                product['name']
-                                    ?.toString() ??
-                                    '';
-
                             searchController
-                                .text =
-                                productName;
+                                .text = name;
 
-                            searchProduct(
-                              productName,
-                              products,
+                            context
+                                .read<
+                                ProductBloc>()
+                                .add(
+                              SearchProducts(
+                                name,
+                              ),
                             );
 
                             setState(() {
                               searchText =
-                                  productName;
-
+                                  name;
                               suggestions =
                               [];
                             });
@@ -499,15 +401,16 @@ class _WishState extends State<wish> {
                   ),
 
                 const SizedBox(height: 20),
+
+
+
                 Row(
                   mainAxisAlignment:
                   MainAxisAlignment
                       .spaceBetween,
-
                   children: [
                     Text(
-                      '${filteredProducts.length} Items',
-
+                      '${products.length} Items',
                       style:
                       const TextStyle(
                         fontSize: 22,
@@ -518,36 +421,31 @@ class _WishState extends State<wish> {
 
                     Row(
                       children: [
+                        // SORT
                         GestureDetector(
-                          onTap: () {
-                            showSortBottomSheet(
-                              products,
-                            );
-                          },
+                          onTap:
+                          showSortBottomSheet,
 
-                          child: Container(
+                          child:
+                          Container(
                             padding:
                             const EdgeInsets
                                 .symmetric(
                               horizontal: 10,
                               vertical: 10,
                             ),
-
                             decoration:
                             BoxDecoration(
-                              color: Colors.white,
-
+                              color:
+                              Colors.white,
                               borderRadius:
                               BorderRadius
                                   .circular(
                                 15,
                               ),
-
-                              boxShadow:
-                              const [
+                              boxShadow: const [
                                 BoxShadow(
-                                  color:
-                                  Color(
+                                  color: Color(
                                     0x14000000,
                                   ),
                                   blurRadius:
@@ -560,13 +458,11 @@ class _WishState extends State<wish> {
                                 ),
                               ],
                             ),
-
                             child:
                             const Row(
                               children: [
                                 Text(
-                                  'sort',
-
+                                  'Sort',
                                   style:
                                   TextStyle(
                                     fontSize:
@@ -576,11 +472,9 @@ class _WishState extends State<wish> {
                                         .bold,
                                   ),
                                 ),
-
                                 SizedBox(
                                   width: 5,
                                 ),
-
                                 Icon(
                                   Icons
                                       .arrow_forward,
@@ -594,36 +488,32 @@ class _WishState extends State<wish> {
                         const SizedBox(
                           width: 10,
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            showFilterBottomSheet(
-                              products,
-                            );
-                          },
 
-                          child: Container(
+                        // FILTER
+                        GestureDetector(
+                          onTap:
+                          showFilterBottomSheet,
+
+                          child:
+                          Container(
                             padding:
                             const EdgeInsets
                                 .symmetric(
                               horizontal: 10,
                               vertical: 10,
                             ),
-
                             decoration:
                             BoxDecoration(
-                              color: Colors.white,
-
+                              color:
+                              Colors.white,
                               borderRadius:
                               BorderRadius
                                   .circular(
                                 15,
                               ),
-
-                              boxShadow:
-                              const [
+                              boxShadow: const [
                                 BoxShadow(
-                                  color:
-                                  Color(
+                                  color: Color(
                                     0x14000000,
                                   ),
                                   blurRadius:
@@ -636,13 +526,11 @@ class _WishState extends State<wish> {
                                 ),
                               ],
                             ),
-
                             child:
                             const Row(
                               children: [
                                 Text(
                                   'Filter',
-
                                   style:
                                   TextStyle(
                                     fontSize:
@@ -652,11 +540,9 @@ class _WishState extends State<wish> {
                                         .bold,
                                   ),
                                 ),
-
                                 SizedBox(
                                   width: 5,
                                 ),
-
                                 Icon(
                                   Icons
                                       .filter_alt_outlined,
@@ -672,62 +558,55 @@ class _WishState extends State<wish> {
                 ),
 
                 const SizedBox(height: 20),
-                if (filteredProducts.isEmpty)
-                  const Padding(
-                    padding:
-                    EdgeInsets.all(50),
-                    child: Text(
-                      'No products found',
-                    ),
-                  )
-                else
-                  MasonryGridView.count(
-                    shrinkWrap: true,
 
-                    physics:
-                    const NeverScrollableScrollPhysics(),
 
-                    crossAxisCount: 2,
 
-                    mainAxisSpacing: 10,
+                MasonryGridView.count(
+                  shrinkWrap: true,
 
-                    crossAxisSpacing: 10,
+                  physics:
+                  const NeverScrollableScrollPhysics(),
 
-                    itemCount:
-                    filteredProducts.length,
+                  crossAxisCount: 2,
 
-                    itemBuilder:
-                        (context, index) {
-                      final product =
-                      filteredProducts[
-                      index];
+                  mainAxisSpacing: 10,
 
-                      return productCard(
-                        product,
-                        index,
-                        products,
-                      );
-                    },
-                  ),
+                  crossAxisSpacing: 10,
+
+                  itemCount:
+                  products.length,
+
+                  itemBuilder:
+                      (context, index) {
+                    final product =
+                    products[index];
+
+                    return productCard(
+                      product,
+                      index,
+                      products,
+                    );
+                  },
+                ),
 
 
                 bottomLoadingSkeleton(
                   state,
                 ),
 
+                // =================================================
+                // NO MORE
+                // =================================================
 
-                if (!state.hasMore &&
-                    products.isNotEmpty)
+                if (!state.hasMore)
                   Padding(
                     padding:
                     const EdgeInsets.only(
                       top: 20,
                       bottom: 30,
                     ),
-
                     child: Text(
                       'No more products',
-
                       style:
                       GoogleFonts.poppins(
                         color: Colors.grey,
@@ -736,7 +615,9 @@ class _WishState extends State<wish> {
                     ),
                   ),
 
-                const SizedBox(height: 30),
+                const SizedBox(
+                  height: 30,
+                ),
               ],
             ),
           );
@@ -746,14 +627,11 @@ class _WishState extends State<wish> {
   }
 
 
-  void showSortBottomSheet(
-      List<Map<String, dynamic>> products,
-      ) {
+
+  void showSortBottomSheet() {
     showModalBottomSheet(
       context: context,
-
       backgroundColor: Colors.white,
-
       shape:
       const RoundedRectangleBorder(
         borderRadius:
@@ -761,23 +639,18 @@ class _WishState extends State<wish> {
           top: Radius.circular(20),
         ),
       ),
-
       builder: (context) {
         return Padding(
           padding:
           const EdgeInsets.all(20),
-
           child: Column(
             mainAxisSize:
             MainAxisSize.min,
-
             crossAxisAlignment:
             CrossAxisAlignment.start,
-
             children: [
               Text(
                 'Sort By',
-
                 style:
                 GoogleFonts.poppins(
                   fontSize: 20,
@@ -788,103 +661,89 @@ class _WishState extends State<wish> {
 
               const SizedBox(height: 15),
 
-              // LOW TO HIGH
+              // LOW → HIGH
               ListTile(
                 leading: const Icon(
                   Icons.arrow_upward,
                 ),
-
                 title: const Text(
                   'Price: Low to High',
                 ),
-
                 onTap: () {
-                  setState(() {
-                    filteredProducts.sort(
-                          (a, b) =>
-                          getPrice(a).compareTo(
-                            getPrice(b),
-                          ),
-                    );
-                  });
+                  context
+                      .read<ProductBloc>()
+                      .add(
+                    const SortProducts(
+                      sortBy: 'price',
+                      order: 'asc',
+                    ),
+                  );
 
                   Navigator.pop(context);
                 },
               ),
 
-              // HIGH TO LOW
+              // HIGH → LOW
               ListTile(
                 leading: const Icon(
                   Icons.arrow_downward,
                 ),
-
                 title: const Text(
                   'Price: High to Low',
                 ),
-
                 onTap: () {
-                  setState(() {
-                    filteredProducts.sort(
-                          (a, b) =>
-                          getPrice(b).compareTo(
-                            getPrice(a),
-                          ),
-                    );
-                  });
+                  context
+                      .read<ProductBloc>()
+                      .add(
+                    const SortProducts(
+                      sortBy: 'price',
+                      order: 'desc',
+                    ),
+                  );
 
                   Navigator.pop(context);
                 },
               ),
 
-              // A TO Z
+              // A → Z
               ListTile(
                 leading: const Icon(
                   Icons.sort_by_alpha,
                 ),
-
                 title: const Text(
                   'Name: A to Z',
                 ),
-
                 onTap: () {
-                  setState(() {
-                    filteredProducts.sort(
-                          (a, b) =>
-                          a['name']
-                              .toString()
-                              .compareTo(
-                            b['name']
-                                .toString(),
-                          ),
-                    );
-                  });
+                  context
+                      .read<ProductBloc>()
+                      .add(
+                    const SortProducts(
+                      sortBy: 'name',
+                      order: 'asc',
+                    ),
+                  );
 
                   Navigator.pop(context);
                 },
               ),
 
-              // Z TO A
+              // Z → A
               ListTile(
                 leading: const Icon(
                   Icons.sort_by_alpha,
                 ),
-
                 title: const Text(
                   'Name: Z to A',
                 ),
-
                 onTap: () {
-                  setState(() {
-                    filteredProducts.sort(
-                          (a, b) =>
-                          b['name']
-                              .toString()
-                              .compareTo(
-                            a['name']
-                                .toString(),
-                          ),
-                    );
-                  });
+                  context
+                      .read<ProductBloc>()
+                      .add(
+                    const SortProducts(
+                      sortBy: 'name',
+                      order: 'desc',
+                    ),
+                  );
 
                   Navigator.pop(context);
                 },
@@ -895,14 +754,12 @@ class _WishState extends State<wish> {
       },
     );
   }
-  void showFilterBottomSheet(
-      List<Map<String, dynamic>> products,
-      ) {
+
+
+  void showFilterBottomSheet() {
     showModalBottomSheet(
       context: context,
-
       backgroundColor: Colors.white,
-
       shape:
       const RoundedRectangleBorder(
         borderRadius:
@@ -910,23 +767,18 @@ class _WishState extends State<wish> {
           top: Radius.circular(15),
         ),
       ),
-
       builder: (context) {
         return Padding(
           padding:
           const EdgeInsets.all(20),
-
           child: Column(
             mainAxisSize:
             MainAxisSize.min,
-
             crossAxisAlignment:
             CrossAxisAlignment.start,
-
             children: [
               Text(
                 'Filter',
-
                 style:
                 GoogleFonts.poppins(
                   fontSize: 25,
@@ -937,60 +789,66 @@ class _WishState extends State<wish> {
 
               const SizedBox(height: 15),
 
+              // ₹200 - ₹300
               ListTile(
                 leading: const Icon(
                   Icons.currency_rupee,
                 ),
-
                 title: const Text(
                   '₹200 to ₹300',
                 ),
-
                 onTap: () {
-                  filterProducts(
-                    200,
-                    300,
-                    products,
+                  context
+                      .read<ProductBloc>()
+                      .add(
+                    const FilterProducts(
+                      minPrice: 200,
+                      maxPrice: 300,
+                    ),
                   );
 
                   Navigator.pop(context);
                 },
               ),
 
+              // ₹300 - ₹1000
               ListTile(
                 leading: const Icon(
                   Icons.currency_rupee,
                 ),
-
                 title: const Text(
                   '₹300 to ₹1,000',
                 ),
-
                 onTap: () {
-                  filterProducts(
-                    300,
-                    1000,
-                    products,
+                  context
+                      .read<ProductBloc>()
+                      .add(
+                    const FilterProducts(
+                      minPrice: 300,
+                      maxPrice: 1000,
+                    ),
                   );
 
                   Navigator.pop(context);
                 },
               ),
 
+              // ₹1000 - ₹10000
               ListTile(
                 leading: const Icon(
                   Icons.currency_rupee,
                 ),
-
                 title: const Text(
                   '₹1,000 to ₹10,000',
                 ),
-
                 onTap: () {
-                  filterProducts(
-                    1000,
-                    10000,
-                    products,
+                  context
+                      .read<ProductBloc>()
+                      .add(
+                    const FilterProducts(
+                      minPrice: 1000,
+                      maxPrice: 10000,
+                    ),
                   );
 
                   Navigator.pop(context);
@@ -999,28 +857,28 @@ class _WishState extends State<wish> {
 
               const Divider(),
 
+              // CLEAR
               ListTile(
                 leading: const Icon(
                   Icons.refresh,
                   color: Colors.red,
                 ),
-
                 title: const Text(
                   'Clear All / Show All',
-
                   style: TextStyle(
                     color: Colors.red,
                     fontWeight:
                     FontWeight.bold,
                   ),
                 ),
-
                 onTap: () {
-                  Navigator.pop(context);
-
-                  showAllProducts(
-                    products,
+                  context
+                      .read<ProductBloc>()
+                      .add(
+                    const SearchProducts(''),
                   );
+
+                  Navigator.pop(context);
                 },
               ),
             ],
@@ -1044,19 +902,20 @@ class _WishState extends State<wish> {
           isFavorite =
               state.favorites.any(
                     (item) =>
-                item['id'] ==
-                    product['id'],
+                item['id'] == product['id'],
               );
         }
 
-        final bool isEven =
-            index.isEven;
+        final bool isEven = index.isEven;
+
+        final String image =
+            product['image']?.toString() ??
+                '';
 
         return GestureDetector(
           onTap: () {
             Navigator.push(
               context,
-
               MaterialPageRoute(
                 builder: (context) =>
                     ProductDetailsPage(
@@ -1072,21 +931,15 @@ class _WishState extends State<wish> {
             decoration:
             BoxDecoration(
               color: Colors.white,
-
               borderRadius:
-              BorderRadius.circular(
-                8,
-              ),
-
+              BorderRadius.circular(8),
               boxShadow: [
                 BoxShadow(
-                  color:
-                  Colors.black.withValues(
+                  color: Colors.black
+                      .withValues(
                     alpha: 0.08,
                   ),
-
                   blurRadius: 5,
-
                   offset:
                   const Offset(0, 2),
                 ),
@@ -1096,7 +949,6 @@ class _WishState extends State<wish> {
             child: Column(
               crossAxisAlignment:
               CrossAxisAlignment.start,
-
               children: [
 
 
@@ -1107,97 +959,23 @@ class _WishState extends State<wish> {
                       const BorderRadius
                           .only(
                         topLeft:
-                        Radius.circular(
-                          8,
-                        ),
-
+                        Radius.circular(8),
                         topRight:
-                        Radius.circular(
-                          8,
-                        ),
+                        Radius.circular(8),
                       ),
-
-                      child: Image.network(
-                        product['image']
-                            ?.toString() ??
-                            '',
-
-                        width:
-                        double.infinity,
-
-                        height:
+                      child:
+                      _buildProductImage(
+                        image,
                         isEven
                             ? 350
                             : 200,
-
-                        fit: BoxFit.cover,
-
-                        loadingBuilder:
-                            (
-                            context,
-                            child,
-                            loadingProgress,
-                            ) {
-                          if (loadingProgress ==
-                              null) {
-                            return child;
-                          }
-
-                          return SizedBox(
-                            width:
-                            double.infinity,
-
-                            height:
-                            isEven
-                                ? 350
-                                : 200,
-
-                            child:
-                            const Center(
-                              child:
-                              CircularProgressIndicator(),
-                            ),
-                          );
-                        },
-
-                        errorBuilder:
-                            (
-                            context,
-                            error,
-                            stackTrace,
-                            ) {
-                          return SizedBox(
-                            width:
-                            double.infinity,
-
-                            height:
-                            isEven
-                                ? 350
-                                : 200,
-
-                            child:
-                            const Center(
-                              child: Icon(
-                                Icons
-                                    .image_not_supported,
-
-                                size: 50,
-
-                                color:
-                                Colors.grey,
-                              ),
-                            ),
-                          );
-                        },
                       ),
                     ),
 
-
-
+                    // FAVORITE
                     Positioned(
                       top: 10,
                       right: 10,
-
                       child:
                       GestureDetector(
                         onTap: () {
@@ -1210,43 +988,34 @@ class _WishState extends State<wish> {
                             ),
                           );
                         },
-
                         child: Container(
                           width: 42,
                           height: 42,
-
                           decoration:
                           BoxDecoration(
                             color:
                             Colors.white,
-
                             shape:
                             BoxShape.circle,
-
                             boxShadow: [
                               BoxShadow(
                                 color: Colors
                                     .black
                                     .withValues(
-                                  alpha:
-                                  0.15,
+                                  alpha: 0.15,
                                 ),
-
                                 blurRadius: 5,
                               ),
                             ],
                           ),
-
                           child: Icon(
                             isFavorite
                                 ? Icons.favorite
                                 : Icons
                                 .favorite_border,
-
                             color: isFavorite
                                 ? Colors.pink
                                 : Colors.black,
-
                             size: 25,
                           ),
                         ),
@@ -1255,36 +1024,29 @@ class _WishState extends State<wish> {
                   ],
                 ),
 
-
+                // =================================================
+                // DETAILS
+                // =================================================
 
                 Padding(
                   padding:
-                  const EdgeInsets.all(
-                    7,
-                  ),
-
+                  const EdgeInsets.all(7),
                   child: Column(
                     crossAxisAlignment:
                     CrossAxisAlignment
                         .start,
-
                     children: [
                       // NAME
                       Text(
                         product['name']
                             ?.toString() ??
                             '',
-
                         maxLines: 1,
-
                         overflow:
-                        TextOverflow
-                            .ellipsis,
-
+                        TextOverflow.ellipsis,
                         style:
                         GoogleFonts.poppins(
                           fontSize: 18,
-
                           fontWeight:
                           FontWeight.w600,
                         ),
@@ -1295,26 +1057,26 @@ class _WishState extends State<wish> {
                         crossAxisAlignment:
                         CrossAxisAlignment
                             .start,
-
                         children: [
-                          if (widget
-                              .showDiscount)
-                            Text(
-                              product[
-                              'discount']
-                                  ?.toString() ??
-                                  '',
-
-                              style: GoogleFonts
-                                  .poppins(
-                                fontSize: 14,
-
-                                fontWeight:
-                                FontWeight
-                                    .bold,
-
-                                color:
-                                Colors.pink,
+                          if (widget.showDiscount)
+                            Flexible(
+                              child: Text(
+                                product[
+                                'discount']
+                                    ?.toString() ??
+                                    '',
+                                overflow:
+                                TextOverflow
+                                    .ellipsis,
+                                style: GoogleFonts
+                                    .poppins(
+                                  fontSize: 14,
+                                  fontWeight:
+                                  FontWeight
+                                      .bold,
+                                  color:
+                                  Colors.pink,
+                                ),
                               ),
                             ),
 
@@ -1325,17 +1087,13 @@ class _WishState extends State<wish> {
                                   .only(
                                 left: 10,
                               ),
-
                               child: Text(
-                                product[
-                                'price']
+                                product['price']
                                     ?.toString() ??
                                     '',
-
                                 style: GoogleFonts
                                     .poppins(
                                   fontSize: 14,
-
                                   fontWeight:
                                   FontWeight
                                       .bold,
@@ -1343,31 +1101,31 @@ class _WishState extends State<wish> {
                               ),
                             ),
 
-                          if (widget
-                              .showOldPrice)
-                            Padding(
-                              padding:
-                              const EdgeInsets
-                                  .only(
-                                left: 10,
-                              ),
-
-                              child: Text(
-                                product[
-                                'oldPrice']
-                                    ?.toString() ??
-                                    '',
-
-                                style: GoogleFonts
-                                    .poppins(
-                                  fontSize: 13,
-
-                                  decoration:
-                                  TextDecoration
-                                      .lineThrough,
-
-                                  color:
-                                  Colors.grey,
+                          if (widget.showOldPrice)
+                            Flexible(
+                              child: Padding(
+                                padding:
+                                const EdgeInsets
+                                    .only(
+                                  left: 10,
+                                ),
+                                child: Text(
+                                  product[
+                                  'oldPrice']
+                                      ?.toString() ??
+                                      '',
+                                  overflow:
+                                  TextOverflow
+                                      .ellipsis,
+                                  style: GoogleFonts
+                                      .poppins(
+                                    fontSize: 13,
+                                    decoration:
+                                    TextDecoration
+                                        .lineThrough,
+                                    color:
+                                    Colors.grey,
+                                  ),
                                 ),
                               ),
                             ),
@@ -1384,28 +1142,24 @@ class _WishState extends State<wish> {
                               Colors.amber,
                               size: 22,
                             ),
-
                             const Icon(
                               Icons.star,
                               color:
                               Colors.amber,
                               size: 22,
                             ),
-
                             const Icon(
                               Icons.star,
                               color:
                               Colors.amber,
                               size: 22,
                             ),
-
                             const Icon(
                               Icons.star,
                               color:
                               Colors.amber,
                               size: 22,
                             ),
-
                             const Icon(
                               Icons.star,
                               color:
@@ -1422,11 +1176,10 @@ class _WishState extends State<wish> {
                               'rating']
                                   ?.toString() ??
                                   '4.0',
-
-                              style: GoogleFonts
+                              style:
+                              GoogleFonts
                                   .poppins(
                                 fontSize: 16,
-
                                 fontWeight:
                                 FontWeight
                                     .bold,
@@ -1444,23 +1197,18 @@ class _WishState extends State<wish> {
                               .only(
                             top: 5,
                           ),
-
                           child: Text(
-                            product[
-                            'desc']
+                            product['desc']
                                 ?.toString() ??
                                 '',
-
                             maxLines: 2,
-
                             overflow:
                             TextOverflow
                                 .ellipsis,
-
-                            style: GoogleFonts
+                            style:
+                            GoogleFonts
                                 .poppins(
                               fontSize: 12,
-
                               color:
                               Colors.grey,
                             ),
@@ -1471,6 +1219,88 @@ class _WishState extends State<wish> {
                 ),
               ],
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ==========================================================
+  // PRODUCT IMAGE
+  // ==========================================================
+
+  Widget _buildProductImage(
+      String image,
+      double height,
+      ) {
+    if (image.isEmpty) {
+      return Container(
+        width: double.infinity,
+        height: height,
+        color: Colors.grey.shade200,
+        child: const Icon(
+          Icons.image_not_supported,
+          size: 50,
+          color: Colors.grey,
+        ),
+      );
+    }
+
+    if (image.startsWith('http://') ||
+        image.startsWith('https://')) {
+      return Image.network(
+        image,
+        width: double.infinity,
+        height: height,
+        fit: BoxFit.cover,
+
+        loadingBuilder:
+            (context, child, progress) {
+          if (progress == null) {
+            return child;
+          }
+
+          return SizedBox(
+            width: double.infinity,
+            height: height,
+            child: const Center(
+              child:
+              CircularProgressIndicator(),
+            ),
+          );
+        },
+
+        errorBuilder:
+            (context, error, stackTrace) {
+          return Container(
+            width: double.infinity,
+            height: height,
+            color: Colors.grey.shade200,
+            child: const Icon(
+              Icons.image_not_supported,
+              size: 50,
+              color: Colors.grey,
+            ),
+          );
+        },
+      );
+    }
+
+    return Image.asset(
+      image,
+      width: double.infinity,
+      height: height,
+      fit: BoxFit.cover,
+      errorBuilder:
+          (context, error, stackTrace) {
+        return Container(
+          width: double.infinity,
+          height: height,
+          color: Colors.grey.shade200,
+          child: const Icon(
+            Icons.image_not_supported,
+            size: 50,
+            color: Colors.grey,
           ),
         );
       },

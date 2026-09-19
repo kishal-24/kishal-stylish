@@ -158,7 +158,7 @@ class _homeState extends State<home> {
 
                             MaterialPageRoute(
                               builder: (context) =>
-                              const wish(
+                              const Wish(
                                 showOldPrice: false,
                               ),
                             ),
@@ -263,9 +263,6 @@ class _homeState extends State<home> {
 
                 const SizedBox(height: 30),
 
-                // =====================================================
-                // DEAL OF THE DAY
-                // =====================================================
 
                 Container(
                   width: double.infinity,
@@ -336,7 +333,7 @@ class _homeState extends State<home> {
 
                             MaterialPageRoute(
                               builder: (context) =>
-                              const wish(
+                              const Wish(
                                 showDiscount: false,
                               ),
                             ),
@@ -485,9 +482,6 @@ class _homeState extends State<home> {
 
                 const SizedBox(height: 30),
 
-                // =====================================================
-                // SPECIAL OFFERS
-                // =====================================================
 
                 SizedBox(
                   height: 150,
@@ -863,7 +857,7 @@ class _homeState extends State<home> {
                                 MaterialPageRoute(
                                   builder:
                                       (context) =>
-                                  const wish(),
+                                  const Wish(),
                                 ),
                               );
                             },

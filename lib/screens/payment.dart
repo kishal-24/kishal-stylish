@@ -14,10 +14,16 @@ import '../widget/bot.dart';
 
 class PaymentPage extends StatefulWidget {
   final String selectedAddress;
+  final double totalAmount;
+  final double subtotal;
+  final double shipping;
 
   const PaymentPage({
     super.key,
     required this.selectedAddress,
+    required this.totalAmount,
+    required this.subtotal,
+    required this.shipping,
   });
 
   @override
@@ -25,22 +31,11 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage> {
-
-  // ============================================================
-  // ERROR TOAST
-  // ============================================================
-
   void showErrorToast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
-
-  // ============================================================
-  // SUCCESS DIALOG
-  // ============================================================
 
   Future<void> showOrderSuccessDialog() async {
     await showDialog(
@@ -61,21 +56,17 @@ class _PaymentPageState extends State<PaymentPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-
                   Lottie.asset(
                     'assets/DONE.json',
                     width: 110,
                     height: 110,
                     repeat: false,
                     onLoaded: (composition) {
-                      Future.delayed(
-                        const Duration(seconds: 3),
-                            () {
-                          if (Navigator.of(dialogContext).canPop()) {
-                            Navigator.of(dialogContext).pop();
-                          }
-                        },
-                      );
+                      Future.delayed(const Duration(seconds: 3), () {
+                        if (Navigator.of(dialogContext).canPop()) {
+                          Navigator.of(dialogContext).pop();
+                        }
+                      });
                     },
                   ),
 
@@ -84,10 +75,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   const Text(
                     'Order placed successfully',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                   ),
 
                   const SizedBox(height: 8),
@@ -95,10 +83,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   const Text(
                     'Your order has been placed successfully.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
@@ -117,29 +102,23 @@ class _PaymentPageState extends State<PaymentPage> {
   Widget build(BuildContext context) {
     return BlocListener<OrderBloc, OrderState>(
       listener: (context, orderState) async {
-
         // ======================================================
         // ORDER SUCCESS
         // ======================================================
 
         if (orderState is OrderSuccess) {
-
           await showOrderSuccessDialog();
 
           if (!mounted) return;
 
           // Clear cart using CartBloc
-          context.read<CartBloc>().add(
-            const ClearCart(),
-          );
+          context.read<CartBloc>().add(const ClearCart());
 
           // Go back to bottom navigation
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(
-              builder: (context) => const bot(),
-            ),
-                (route) => false,
+            MaterialPageRoute(builder: (context) => const bot()),
+            (route) => false,
           );
         }
 
@@ -158,7 +137,6 @@ class _PaymentPageState extends State<PaymentPage> {
         // ======================================================
         // APP BAR
         // ======================================================
-
         appBar: AppBar(
           backgroundColor: const Color(0xffFDFDFD),
           elevation: 0,
@@ -188,19 +166,15 @@ class _PaymentPageState extends State<PaymentPage> {
         // ======================================================
         // CART BLOC
         // ======================================================
-
         body: BlocBuilder<CartBloc, CartState>(
           builder: (context, cartState) {
-
             // ==================================================
             // CART LOADING
             // ==================================================
 
             if (cartState is CartLoading) {
               return const Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xffF83758),
-                ),
+                child: CircularProgressIndicator(color: Color(0xffF83758)),
               );
             }
 
@@ -212,9 +186,7 @@ class _PaymentPageState extends State<PaymentPage> {
               return Center(
                 child: Text(
                   cartState.message,
-                  style: const TextStyle(
-                    color: Colors.red,
-                  ),
+                  style: const TextStyle(color: Colors.red),
                 ),
               );
             }
@@ -224,14 +196,11 @@ class _PaymentPageState extends State<PaymentPage> {
             // ==================================================
 
             if (cartState is CartLoaded) {
-
               final cartItems = cartState.cartItems;
 
-              final double totalAmount =
-                  cartState.totalPrice;
+              final double totalAmount = widget.totalAmount;
 
-              final double finalTotal =
-                  totalAmount + 30;
+              final double finalTotal = totalAmount;
 
               // ================================================
               // EMPTY CART
@@ -241,10 +210,7 @@ class _PaymentPageState extends State<PaymentPage> {
                 return const Center(
                   child: Text(
                     'Your cart is empty',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 );
               }
@@ -257,17 +223,14 @@ class _PaymentPageState extends State<PaymentPage> {
                 padding: const EdgeInsets.all(15),
 
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
 
                   children: [
-
                     const SizedBox(height: 20),
 
                     // ==========================================
                     // ORDER SUMMARY
                     // ==========================================
-
                     const Text(
                       'Order Summary',
                       style: TextStyle(
@@ -281,25 +244,18 @@ class _PaymentPageState extends State<PaymentPage> {
                     // ==========================================
                     // ORDER PRICE
                     // ==========================================
-
                     Row(
-                      mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                       children: [
                         const Text(
                           'Order',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
 
                         Text(
-                          '₹ ${totalAmount.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                          ),
+                          '₹ ${widget.subtotal.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 14),
                         ),
                       ],
                     ),
@@ -309,40 +265,31 @@ class _PaymentPageState extends State<PaymentPage> {
                     // ==========================================
                     // SHIPPING
                     // ==========================================
-
                     Row(
-                      mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
-                      children: const [
-                        Text(
+                      children: [
+                        const Text(
                           'Shipping',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
 
                         Text(
-                          '₹ 30',
-                          style: TextStyle(
-                            fontSize: 14,
-                          ),
+                          widget.shipping == 0
+                              ? 'FREE'
+                              : '₹ ${widget.shipping.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 14),
                         ),
                       ],
                     ),
 
-                    const Divider(
-                      height: 30,
-                    ),
+                    const Divider(height: 30),
 
                     // ==========================================
                     // TOTAL
                     // ==========================================
-
                     Row(
-                      mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                       children: [
                         const Text(
@@ -368,7 +315,6 @@ class _PaymentPageState extends State<PaymentPage> {
                     // ==========================================
                     // PAYMENT METHOD
                     // ==========================================
-
                     const Text(
                       'Payment Method',
                       style: TextStyle(
@@ -379,33 +325,24 @@ class _PaymentPageState extends State<PaymentPage> {
 
                     const SizedBox(height: 15),
 
-                    paymentMethod(
-                      image: 'assets/visa.png',
-                    ),
+                    paymentMethod(image: 'assets/visa.png'),
 
                     const SizedBox(height: 15),
 
-                    paymentMethod(
-                      image: 'assets/paypal.png',
-                    ),
+                    paymentMethod(image: 'assets/paypal.png'),
 
                     const SizedBox(height: 15),
 
-                    paymentMethod(
-                      image: 'assets/maes.png',
-                    ),
+                    paymentMethod(image: 'assets/ic_launcher.png'),
 
                     const SizedBox(height: 30),
 
                     // ==========================================
                     // CONTINUE BUTTON
                     // ==========================================
-
                     BlocBuilder<OrderBloc, OrderState>(
                       builder: (context, orderState) {
-
-                        final bool isLoading =
-                        orderState is OrderLoading;
+                        final bool isLoading = orderState is OrderLoading;
 
                         return Center(
                           child: SizedBox(
@@ -413,62 +350,52 @@ class _PaymentPageState extends State<PaymentPage> {
                             height: 55,
 
                             child: ElevatedButton(
-                              style:
-                              ElevatedButton.styleFrom(
-                                backgroundColor:
-                                const Color(0xffF83758),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xffF83758),
 
-                                disabledBackgroundColor:
-                                const Color(0xffF83758),
+                                disabledBackgroundColor: const Color(
+                                  0xffF83758,
+                                ),
 
-                                shape:
-                                RoundedRectangleBorder(
-                                  borderRadius:
-                                  BorderRadius.circular(10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
 
                               onPressed: isLoading
                                   ? null
                                   : () {
+                                      // ======================
+                                      // SEND ORDER EVENT
+                                      // ======================
 
-                                // ======================
-                                // SEND ORDER EVENT
-                                // ======================
-
-                                context
-                                    .read<OrderBloc>()
-                                    .add(
-                                  PlaceOrder(
-                                    cartItems: cartItems,
-                                    totalAmount:
-                                    totalAmount,
-                                    selectedAddress:
-                                    widget
-                                        .selectedAddress,
-                                  ),
-                                );
-                              },
+                                      context.read<OrderBloc>().add(
+                                        PlaceOrder(
+                                          cartItems: cartItems,
+                                          totalAmount: totalAmount,
+                                          selectedAddress:
+                                              widget.selectedAddress,
+                                        ),
+                                      );
+                                    },
 
                               child: isLoading
                                   ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child:
-                                CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2.5,
-                                ),
-                              )
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2.5,
+                                      ),
+                                    )
                                   : const Text(
-                                'Continue',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight:
-                                  FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
+                                      'Continue',
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                             ),
                           ),
                         );
@@ -492,9 +419,7 @@ class _PaymentPageState extends State<PaymentPage> {
   // PAYMENT METHOD WIDGET
   // ============================================================
 
-  Widget paymentMethod({
-    required String image,
-  }) {
+  Widget paymentMethod({required String image}) {
     return Container(
       width: double.infinity,
       height: 65,
@@ -504,15 +429,11 @@ class _PaymentPageState extends State<PaymentPage> {
 
         borderRadius: BorderRadius.circular(10),
 
-        border: Border.all(
-          color: Colors.grey.shade300,
-        ),
+        border: Border.all(color: Colors.grey.shade300),
       ),
 
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
 
         child: Image.asset(
           image,

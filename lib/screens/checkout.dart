@@ -1057,7 +1057,6 @@ class _checkoutState extends State<checkout> {
                           child:
                           ElevatedButton(
                             onPressed: () {
-                              // ADDRESS CHECK
                               if (selectedAddress
                                   .trim()
                                   .isEmpty) {
@@ -1074,7 +1073,6 @@ class _checkoutState extends State<checkout> {
                                 return;
                               }
 
-                              // CART CHECK
                               if (cartItems
                                   .isEmpty) {
                                 Fluttertoast
@@ -1093,7 +1091,10 @@ class _checkoutState extends State<checkout> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const PlaceOrderPage(),
+                                  builder: (context) => PlaceOrderPage(
+                                    cartItems: cartItems,
+                                    isBuyNow: true,
+                                  ),
                                 ),
                               );
                             },

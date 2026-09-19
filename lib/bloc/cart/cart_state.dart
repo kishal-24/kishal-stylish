@@ -34,6 +34,8 @@ class CartLoaded extends CartState {
     this.totalPrice = 0.0,
   });
 
+  int get count => cartItems.length;
+
   CartLoaded copyWith({
     List<Map<String, dynamic>>? cartItems,
     double? totalPrice,

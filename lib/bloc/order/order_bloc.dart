@@ -9,10 +9,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     on<PlaceOrder>(_placeOrder);
   }
 
-  Future<void> _placeOrder(
-      PlaceOrder event,
-      Emitter<OrderState> emit,
-      ) async {
+  Future<void> _placeOrder(PlaceOrder event, Emitter<OrderState> emit) async {
     try {
       emit(OrderLoading());
 
@@ -22,16 +19,13 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       }
 
       final products = event.cartItems.map((item) {
-        return {
-          'id': item['id'],
-          'quantity': item['quantity'] ?? 1,
-        };
+        return {'id': item['id'], 'quantity': item['quantity'] ?? 1};
       }).toList();
 
       final result = await ApiService.createOrder(
         userId: 1,
         products: products,
-        totalAmount: event.totalAmount + 30,
+        totalAmount: event.totalAmount,
         selectedAddress: event.selectedAddress,
       );
 
@@ -42,11 +36,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
       emit(OrderSuccess(result));
     } catch (e) {
-      emit(
-        OrderError(
-          'Order failed',
-        ),
-      );
+      emit(OrderError('Order failed'));
     }
   }
 }

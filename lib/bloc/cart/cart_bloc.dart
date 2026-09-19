@@ -133,8 +133,16 @@ class CartBloc extends Bloc<CartEvent, CartState> {
             ) ??
                 1;
 
-        cartItems[existingIndex]['quantity'] =
+        final Map<String, dynamic> updatedItem =
+        Map<String, dynamic>.from(
+          cartItems[existingIndex],
+        );
+
+        updatedItem['quantity'] =
             quantity + 1;
+
+        cartItems[existingIndex] =
+            updatedItem;
 
       } else {
 
@@ -208,8 +216,16 @@ class CartBloc extends Bloc<CartEvent, CartState> {
             1;
 
 
-    cartItems[event.index]['quantity'] =
+    final Map<String, dynamic> updatedItem =
+    Map<String, dynamic>.from(
+      cartItems[event.index],
+    );
+
+    updatedItem['quantity'] =
         quantity + 1;
+
+    cartItems[event.index] =
+        updatedItem;
 
 
     // Save
@@ -268,8 +284,16 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
     if (quantity > 1) {
 
-      cartItems[event.index]['quantity'] =
+      final Map<String, dynamic> updatedItem =
+      Map<String, dynamic>.from(
+        cartItems[event.index],
+      );
+
+      updatedItem['quantity'] =
           quantity - 1;
+
+      cartItems[event.index] =
+          updatedItem;
 
     } else {
 
