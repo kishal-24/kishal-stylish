@@ -130,7 +130,7 @@ class _ProductDetailsPageState
 
     if (combined.contains('watch')) {
       return [
-        'Free Size',
+        'standard',
       ];
     }
 
@@ -139,7 +139,7 @@ class _ProductDetailsPageState
     // ========================================================
 
     return [
-      'Free Size',
+      '',
     ];
   }
 
