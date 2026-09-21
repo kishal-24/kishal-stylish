@@ -1024,9 +1024,7 @@ class _WishState extends State<Wish> {
                   ],
                 ),
 
-                // =================================================
-                // DETAILS
-                // =================================================
+
 
                 Padding(
                   padding:
@@ -1061,12 +1059,10 @@ class _WishState extends State<Wish> {
                           if (widget.showDiscount)
                             Flexible(
                               child: Text(
-                                product[
+                                '₹${product[
                                 'discount']
-                                    ?.toString() ??
-                                    '',
-                                overflow:
-                                TextOverflow
+                                ?.toString() ?? ''}',
+                            overflow: TextOverflow
                                     .ellipsis,
                                 style: GoogleFonts
                                     .poppins(
@@ -1110,10 +1106,7 @@ class _WishState extends State<Wish> {
                                   left: 10,
                                 ),
                                 child: Text(
-                                  product[
-                                  'oldPrice']
-                                      ?.toString() ??
-                                      '',
+                                  '₹${product['oldPrice']?.toString() ?? ''}',
                                   overflow:
                                   TextOverflow
                                       .ellipsis,
@@ -1225,9 +1218,6 @@ class _WishState extends State<Wish> {
     );
   }
 
-  // ==========================================================
-  // PRODUCT IMAGE
-  // ==========================================================
 
   Widget _buildProductImage(
       String image,
