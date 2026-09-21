@@ -17,6 +17,8 @@ import 'package:stylish/widget/loading_skeleton.dart';
 
 import 'bloc/order/order_bloc.dart';
 import 'bloc/product/product_event.dart';
+import 'bloc/profile/profile_bloc.dart';
+import 'bloc/profile/profile_event.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +39,10 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => AuthBloc(authRepository: AuthRepository())),
         BlocProvider(create: (_) => CartBloc()..add(const LoadCart())),
         BlocProvider(create: (_) => FavoriteBloc()),
+        BlocProvider<ProfileBloc>(
+          create: (context) => ProfileBloc()
+            ..add(const LoadProfile()),
+        ),
 
 
         BlocProvider<ProductBloc>(

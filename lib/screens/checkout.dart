@@ -12,6 +12,10 @@ import '../bloc/cart/cart_bloc.dart';
 import '../bloc/cart/cart_event.dart';
 import '../bloc/cart/cart_state.dart';
 
+import '../bloc/profile/profile_bloc.dart';
+import '../bloc/profile/profile_state.dart';
+import '../bloc/profile/profile_event.dart';
+
 class checkout extends StatefulWidget {
   const checkout({super.key});
 
@@ -593,8 +597,18 @@ class _checkoutState extends State<checkout> {
           ),
         ),
       ),
-      body: BlocBuilder<CartBloc, CartState>(
-        builder: (context, state) {
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<ProfileBloc, ProfileState>(
+            listener: (context, state) {
+              if (state is ProfileLoaded || state is ProfileSaved) {
+                loadAddresses();
+              }
+            },
+          ),
+        ],
+        child: BlocBuilder<CartBloc, CartState>(
+          builder: (context, state) {
           if (state is CartLoading) {
             return const Center(
               child: CircularProgressIndicator(
@@ -1136,6 +1150,7 @@ class _checkoutState extends State<checkout> {
           );
         },
       ),
+    ),
     );
   }
 }

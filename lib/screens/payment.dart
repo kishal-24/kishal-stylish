@@ -333,7 +333,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
                     const SizedBox(height: 15),
 
-                    paymentMethod(image: 'assets/ic_launcher.png'),
+                    paymentMethod(image: 'assets/paypal.png'),
 
                     const SizedBox(height: 30),
 
